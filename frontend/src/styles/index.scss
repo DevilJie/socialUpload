@@ -4,17 +4,62 @@
 // 导入变量
 @use './variables.scss' as *;
 
-// 全局样式
+// 导入设计系统
+@use './design-system.scss';
+
+// 全局样式 - 暗色主题
 body {
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
     'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
     sans-serif;
   color: $text-primary;
   background-color: $bg-color-page;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 #app {
   min-height: 100vh;
+}
+
+// Element Plus 暗色覆盖
+.el-card {
+  background-color: $bg-color-surface;
+  border-color: $border-base;
+  color: $text-primary;
+
+  .el-card__header {
+    border-color: $border-base;
+    color: $text-primary;
+  }
+}
+
+.el-button--primary {
+  --el-button-bg-color: #{$primary-color};
+  --el-button-border-color: #{$primary-color};
+  --el-button-hover-bg-color: #16a34a;
+  --el-button-hover-border-color: #16a34a;
+  --el-button-active-bg-color: #15803d;
+  --el-button-active-border-color: #15803d;
+}
+
+// 滚动条样式
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: $bg-color-page;
+}
+
+::-webkit-scrollbar-thumb {
+  background: $border-base;
+  border-radius: 3px;
+
+  &:hover {
+    background: $text-muted;
+  }
 }
 
 // 通用工具类

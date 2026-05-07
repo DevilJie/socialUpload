@@ -1,0 +1,48 @@
+// Element Plus CSS 变量暗色覆盖
+:root {
+  // 背景色
+  --el-bg-color: #1E293B;
+  --el-bg-color-page: #020617;
+  --el-bg-color-overlay: #0F172A;
+
+  // 文字色
+  --el-text-color-primary: #F8FAFC;
+  --el-text-color-regular: #94A3B8;
+  --el-text-color-secondary: #94A3B8;
+  --el-text-color-placeholder: #64748B;
+  --el-text-color-disabled: #475569;
+
+  // 边框色
+  --el-border-color: #334155;
+  --el-border-color-light: #334155;
+  --el-border-color-lighter: #1E293B;
+  --el-border-color-extra-light: #1E293B;
+
+  // 填充色
+  --el-fill-color: #1E293B;
+  --el-fill-color-light: #1E293B;
+  --el-fill-color-lighter: #0F172A;
+  --el-fill-color-extra-light: #0F172A;
+  --el-fill-color-dark: #020617;
+  --el-fill-color-darker: #020617;
+  --el-fill-color-blank: #1E293B;
+
+  // 主色
+  --el-color-primary: #22C55E;
+  --el-color-primary-light-3: #4ade80;
+  --el-color-primary-light-5: #86efac;
+  --el-color-primary-light-7: #bbf7d0;
+  --el-color-primary-light-8: #dcfce7;
+  --el-color-primary-light-9: #f0fdf4;
+  --el-color-primary-dark-2: #16a34a;
+
+  // 阴影
+  --el-box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3), 0 0 6px rgba(0, 0, 0, 0.2);
+  --el-box-shadow-light: 0 2px 12px 0 rgba(0, 0, 0, 0.3);
+  --el-box-shadow-lighter: 0 1px 4px rgba(0, 0, 0, 0.2);
+  --el-box-shadow-dark: 0 2px 4px rgba(0, 0, 0, 0.4), 0 0 6px rgba(0, 0, 0, 0.3);
+
+  // 遮罩
+  --el-mask-color: rgba(0, 0, 0, 0.6);
+  --el-mask-color-extra-light: rgba(0, 0, 0, 0.3);
+}

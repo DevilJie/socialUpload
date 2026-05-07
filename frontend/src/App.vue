@@ -5,36 +5,44 @@
         <div class="sidebar">
           <div class="logo">
             <img v-show="isCollapse" src="/vite.svg" alt="Logo" class="logo-img">
-            <h2 v-show="!isCollapse">自媒体自动化运营系统</h2>
+            <h2 v-show="!isCollapse">Social Auto Upload</h2>
           </div>
           <el-menu
             :router="true"
             :default-active="activeMenu"
             :collapse="isCollapse"
             class="sidebar-menu"
-            background-color="#001529"
-            text-color="#fff"
-            active-text-color="#409EFF"
+            background-color="#020617"
+            text-color="#94A3B8"
+            active-text-color="#22C55E"
           >
             <el-menu-item index="/">
               <el-icon><HomeFilled /></el-icon>
-              <span>首页</span>
+              <span>Dashboard</span>
             </el-menu-item>
             <el-menu-item index="/account-management">
               <el-icon><User /></el-icon>
-              <span>账号管理</span>
+              <span>Account</span>
             </el-menu-item>
             <el-menu-item index="/material-management">
               <el-icon><Picture /></el-icon>
-              <span>素材管理</span>
+              <span>Material</span>
             </el-menu-item>
             <el-menu-item index="/publish-center">
               <el-icon><Upload /></el-icon>
-              <span>发布中心</span>
+              <span>Publish</span>
             </el-menu-item>
-            <el-menu-item index="/about">
-              <el-icon><DataAnalysis /></el-icon>
-              <span>关于</span>
+            <el-menu-item index="/task-center">
+              <el-icon><List /></el-icon>
+              <span>Tasks</span>
+            </el-menu-item>
+            <el-menu-item index="/publish-history">
+              <el-icon><Clock /></el-icon>
+              <span>History</span>
+            </el-menu-item>
+            <el-menu-item index="/settings">
+              <el-icon><Setting /></el-icon>
+              <span>Settings</span>
             </el-menu-item>
           </el-menu>
         </div>
@@ -46,7 +54,7 @@
               <el-icon class="toggle-sidebar" @click="toggleSidebar"><Fold /></el-icon>
             </div>
             <div class="header-right">
-              <!-- 账号信息已移除 -->
+              <!-- reserved -->
             </div>
           </div>
         </el-header>
@@ -62,8 +70,8 @@
 import { ref, computed } from 'vue'
 import { useRoute } from 'vue-router'
 import {
-  HomeFilled, User, DataAnalysis,
-  Fold, Picture, Upload
+  HomeFilled, User, Picture, Upload,
+  List, Clock, Setting, Fold
 } from '@element-plus/icons-vue'
 
 const route = useRoute()
@@ -94,51 +102,60 @@ const toggleSidebar = () => {
 }
 
 .el-aside {
-  background-color: #001529;
-  color: #fff;
+  background-color: $bg-color-page;
+  color: $text-primary;
   height: 100vh;
   overflow: hidden;
-  transition: width 0.3s;
-  
+  transition: width $transition-normal;
+
   .sidebar {
     display: flex;
     flex-direction: column;
     height: 100%;
-    
+
     .logo {
       height: 60px;
       padding: 0 16px;
       display: flex;
       align-items: center;
-      background-color: #002140;
+      background-color: $bg-color-overlay;
       overflow: hidden;
-      
+
       .logo-img {
         width: 32px;
         height: 32px;
         margin-right: 12px;
       }
-      
+
       h2 {
-        color: #fff;
+        color: $text-primary;
         font-size: 16px;
         font-weight: 600;
         white-space: nowrap;
         margin: 0;
       }
     }
-    
+
     .sidebar-menu {
       border-right: none;
       flex: 1;
-      
+
       .el-menu-item {
         display: flex;
         align-items: center;
-        
+
         .el-icon {
           margin-right: 10px;
           font-size: 18px;
+        }
+
+        &.is-active {
+          color: $primary-color;
+          background-color: rgba($primary-color, 0.1);
+        }
+
+        &:hover {
+          background-color: rgba($primary-color, 0.05);
         }
       }
     }
@@ -146,44 +163,44 @@ const toggleSidebar = () => {
 }
 
 .el-header {
-  background-color: #fff;
-  box-shadow: 0 1px 4px rgba(0, 21, 41, 0.08);
+  background-color: $bg-color-overlay;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
   padding: 0;
   height: 60px;
-  
+
   .header-content {
     display: flex;
     justify-content: space-between;
     align-items: center;
     height: 100%;
     padding: 0 16px;
-    
+
     .header-left {
       .toggle-sidebar {
         font-size: 20px;
         cursor: pointer;
-        color: $text-regular;
-        
+        color: $text-secondary;
+
         &:hover {
           color: $primary-color;
         }
       }
     }
-    
+
     .header-right {
       .user-dropdown {
         display: flex;
         align-items: center;
         cursor: pointer;
-        
+
         .username {
           margin: 0 8px;
-          color: $text-regular;
+          color: $text-secondary;
         }
-        
+
         .el-icon {
           font-size: 12px;
-          color: $text-secondary;
+          color: $text-muted;
         }
       }
     }

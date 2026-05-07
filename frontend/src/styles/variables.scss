@@ -1,26 +1,28 @@
-// 颜色变量
-$primary-color: #409eff;
-$success-color: #67c23a;
+// 颜色变量 - 暗色主题
+$primary-color: #22C55E;
+$success-color: #22C55E;
 $warning-color: #e6a23c;
 $danger-color: #f56c6c;
 $info-color: #909399;
 
 // 文字颜色
-$text-primary: #303133;
-$text-regular: #606266;
-$text-secondary: #909399;
-$text-placeholder: #c0c4cc;
+$text-primary: #F8FAFC;
+$text-regular: #94A3B8;
+$text-secondary: #94A3B8;
+$text-muted: #64748B;
+$text-placeholder: #64748B;
 
 // 边框颜色
-$border-base: #dcdfe6;
-$border-light: #e4e7ed;
-$border-lighter: #ebeef5;
-$border-extra-light: #f2f6fc;
+$border-base: #334155;
+$border-light: #334155;
+$border-lighter: #1E293B;
+$border-extra-light: #1E293B;
 
 // 背景颜色
-$bg-color: #ffffff;
-$bg-color-page: #f2f3f5;
-$bg-color-overlay: #ffffff;
+$bg-color: #1E293B;
+$bg-color-page: #020617;
+$bg-color-overlay: #0F172A;
+$bg-color-surface: #1E293B;
 
 // 字体大小
 $font-size-extra-large: 20px;
@@ -44,11 +46,15 @@ $border-radius-round: 20px;
 $border-radius-circle: 50%;
 
 // 阴影
-$box-shadow-base: 0 2px 4px rgba(0, 0, 0, 0.12), 0 0 6px rgba(0, 0, 0, 0.04);
-$box-shadow-dark: 0 2px 4px rgba(0, 0, 0, 0.12), 0 0 6px rgba(0, 0, 0, 0.12);
-$box-shadow-light: 0 2px 12px 0 rgba(0, 0, 0, 0.1);
+$box-shadow-base: 0 2px 4px rgba(0, 0, 0, 0.3), 0 0 6px rgba(0, 0, 0, 0.2);
+$box-shadow-dark: 0 2px 4px rgba(0, 0, 0, 0.4), 0 0 6px rgba(0, 0, 0, 0.3);
+$box-shadow-light: 0 2px 12px 0 rgba(0, 0, 0, 0.3);
 
 // 层级
 $z-index-normal: 1;
 $z-index-top: 1000;
 $z-index-popper: 2000;
+
+// 过渡
+$transition-fast: 150ms ease;
+$transition-normal: 200ms ease;

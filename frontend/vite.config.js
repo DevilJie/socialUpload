@@ -21,11 +21,62 @@ export default defineConfig({
     port: 5173,
     open: true,
     proxy: {
-      '/api': {
+      '/login': {
         target: 'http://localhost:5409',
         changeOrigin: true,
-        rewrite: (path) => path.replace(/^\/api/, '')
-      }
+      },
+      '/upload': {
+        target: 'http://localhost:5409',
+        changeOrigin: true,
+      },
+      '/uploadSave': {
+        target: 'http://localhost:5409',
+        changeOrigin: true,
+      },
+      '/getFiles': {
+        target: 'http://localhost:5409',
+        changeOrigin: true,
+      },
+      '/getFile': {
+        target: 'http://localhost:5409',
+        changeOrigin: true,
+      },
+      '/deleteFile': {
+        target: 'http://localhost:5409',
+        changeOrigin: true,
+      },
+      '/getAccounts': {
+        target: 'http://localhost:5409',
+        changeOrigin: true,
+      },
+      '/getValidAccounts': {
+        target: 'http://localhost:5409',
+        changeOrigin: true,
+      },
+      '/deleteAccount': {
+        target: 'http://localhost:5409',
+        changeOrigin: true,
+      },
+      '/postVideo': {
+        target: 'http://localhost:5409',
+        changeOrigin: true,
+      },
+      '/postVideoBatch': {
+        target: 'http://localhost:5409',
+        changeOrigin: true,
+      },
+      '/updateUserinfo': {
+        target: 'http://localhost:5409',
+        changeOrigin: true,
+      },
+      '/uploadCookie': {
+        target: 'http://localhost:5409',
+        changeOrigin: true,
+      },
+      '/downloadCookie': {
+        target: 'http://localhost:5409',
+        changeOrigin: true,
+      },
     }
   },
   build: {
