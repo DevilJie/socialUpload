@@ -143,7 +143,7 @@
                   :class="['platform-card', `platform-${getPlatformKey(p.key)}`, { active: tab.selectedPlatform === p.key }]"
                   @click="tab.selectedPlatform = p.key"
                 >
-                  <div class="platform-letter">{{ p.name.charAt(0) }}</div>
+                  <div class="platform-letter"><img :src="p.logo" :alt="p.name" class="platform-logo-img" /></div>
                   <div class="platform-name">{{ p.name }}</div>
                 </div>
               </div>
@@ -506,6 +506,7 @@ import { useAccountStore } from '@/stores/account'
 import { useAppStore } from '@/stores/app'
 import { materialApi } from '@/api/material'
 import { http } from '@/utils/request'
+import { platformList, platformIdToName, getPlatformById } from '@/config/platforms'
 
 // API base URL
 const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5409'
@@ -538,17 +539,12 @@ const batchPublishMessage = ref('')
 const batchPublishType = ref('info')
 
 // 平台列表 - 对应后端type字段
-const platforms = [
-  { key: 3, name: '抖音' },
-  { key: 4, name: '快手' },
-  { key: 2, name: '视频号' },
-  { key: 1, name: '小红书' }
-]
+const platforms = platformList.map(p => ({ key: p.id, name: p.name, logo: p.logo }))
 
 // 平台key到CSS名称的映射
 const getPlatformKey = (key) => {
-  const map = { 3: 'douyin', 4: 'kuaishou', 2: 'channels', 1: 'xiaohongshu' }
-  return map[key] || 'default'
+  const platform = getPlatformById(key)
+  return platform?.cssClass || 'default'
 }
 
 const defaultTabInit = {
@@ -597,13 +593,7 @@ const accountStore = useAccountStore()
 
 // 根据选择的平台获取可用账号列表
 const availableAccounts = computed(() => {
-  const platformMap = {
-    3: '抖音',
-    2: '视频号',
-    1: '小红书',
-    4: '快手'
-  }
-  const currentPlatform = currentTab.value ? platformMap[currentTab.value.selectedPlatform] : null
+  const currentPlatform = currentTab.value ? platformIdToName[currentTab.value.selectedPlatform] : null
   return currentPlatform ? accountStore.accounts.filter(acc => acc.platform === currentPlatform) : []
 })
 
@@ -1350,6 +1340,10 @@ const batchPublish = async () => {
           background: $platform-xiaohongshu-bg;
           .platform-letter { background: $platform-xiaohongshu; }
         }
+        &.platform-bilibili {
+          background: $platform-bilibili-bg;
+          .platform-letter { background: $platform-bilibili; }
+        }
       }
 
       .platform-letter {
@@ -1364,6 +1358,13 @@ const batchPublish = async () => {
         font-size: 16px;
         background: $text-muted;
         transition: $transition-base;
+
+        .platform-logo-img {
+          width: 22px;
+          height: 22px;
+          object-fit: contain;
+          filter: brightness(0) invert(1);
+        }
       }
 
       .platform-name {

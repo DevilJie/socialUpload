@@ -121,6 +121,7 @@ import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
 import { Refresh, List } from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
 import { taskApi } from '@/api/v2'
+import { platformCssMap } from '@/config/platforms'
 
 const tasks = ref([])
 const loading = ref(false)
@@ -249,13 +250,7 @@ const shortId = (id) => {
 }
 
 const getPlatformClass = (platform) => {
-  const classMap = {
-    '抖音': 'douyin',
-    '快手': 'kuaishou',
-    '视频号': 'channels',
-    '小红书': 'xiaohongshu',
-  }
-  return classMap[platform] || ''
+  return platformCssMap[platform] || ''
 }
 
 const getStatusClass = (status) => {
@@ -501,6 +496,11 @@ onBeforeUnmount(() => {
         &.xiaohongshu {
           background: $platform-xiaohongshu-bg;
           color: $platform-xiaohongshu;
+        }
+
+        &.bilibili {
+          background: $platform-bilibili-bg;
+          color: $platform-bilibili;
         }
       }
 

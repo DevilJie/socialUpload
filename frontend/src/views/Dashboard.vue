@@ -39,10 +39,9 @@
         </div>
         <div class="stat-bottom">
           <div class="stat-detail platform-tags">
-            <span class="platform-tag douyin">抖音 {{ platformStats.douyin }}</span>
-            <span class="platform-tag kuaishou">快手 {{ platformStats.kuaishou }}</span>
-            <span class="platform-tag channels">视频号 {{ platformStats.channels }}</span>
-            <span class="platform-tag xiaohongshu">小红书 {{ platformStats.xiaohongshu }}</span>
+            <span v-for="p in platformList" :key="p.id" :class="['platform-tag', p.cssClass]">
+              {{ p.name }} {{ platformStats[p.cssClass] || 0 }}
+            </span>
           </div>
         </div>
       </div>
@@ -183,6 +182,7 @@ import { accountApi } from '@/api/account'
 import { materialApi } from '@/api/material'
 import { useAccountStore } from '@/stores/account'
 import { useAppStore } from '@/stores/app'
+import { platformList } from '@/config/platforms'
 
 const router = useRouter()
 const accountStore = useAccountStore()
@@ -204,13 +204,13 @@ const accountStats = computed(() => {
 // 平台统计数据 - 从真实数据计算
 const platformStats = computed(() => {
   const accounts = accountStore.accounts
-  const kuaishou = accounts.filter(a => a.platform === '快手').length
-  const douyin = accounts.filter(a => a.platform === '抖音').length
-  const channels = accounts.filter(a => a.platform === '视频号').length
-  const xiaohongshu = accounts.filter(a => a.platform === '小红书').length
+  const counts = {}
+  platformList.forEach(p => {
+    counts[p.cssClass] = accounts.filter(a => a.platform === p.name).length
+  })
   // 统计有账号的平台数量
-  const total = [kuaishou, douyin, channels, xiaohongshu].filter(n => n > 0).length
-  return { total, kuaishou, douyin, channels, xiaohongshu }
+  const total = platformList.filter(p => counts[p.cssClass] > 0).length
+  return { total, ...counts }
 })
 
 // 素材统计数据 - 从真实数据计算
@@ -471,6 +471,11 @@ export default {
       &.xiaohongshu {
         color: $platform-xiaohongshu;
         background: $platform-xiaohongshu-bg;
+      }
+
+      &.bilibili {
+        color: $platform-bilibili;
+        background: $platform-bilibili-bg;
       }
     }
   }

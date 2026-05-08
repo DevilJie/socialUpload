@@ -34,7 +34,7 @@ class TaskStatus(str, Enum):
 class PublishTask:
     id: str = field(default_factory=lambda: str(uuid.uuid4()))
     platform: str = ""
-    platform_type: int = 0  # 1=小红书 2=视频号 3=抖音 4=快手
+    platform_type: int = 0  # 1=小红书 2=视频号 3=抖音 4=快手 5=B站
     account_name: str = ""
     account_cookie_path: str = ""
     video_path: str = ""
@@ -159,7 +159,8 @@ class TaskQueue:
         """调用上游 uploader 执行上传"""
         from myUtils.postVideo import (
             post_video_DouYin, post_video_ks,
-            post_video_tencent, post_video_xhs
+            post_video_tencent, post_video_xhs,
+            post_video_bilibili
         )
 
         file_list = [task.video_path]
@@ -189,8 +190,14 @@ class TaskQueue:
                     )
                 )
             case 4:
-                await loop.run_executor(
+                await loop.run_in_executor(
                     None, lambda: post_video_ks(
+                        title, file_list, tags, account_list, None, 0, 1, ['10:00'], 0
+                    )
+                )
+            case 5:
+                await loop.run_in_executor(
+                    None, lambda: post_video_bilibili(
                         title, file_list, tags, account_list, None, 0, 1, ['10:00'], 0
                     )
                 )

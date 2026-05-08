@@ -66,7 +66,7 @@
               </span>
             </template>
           </el-table-column>
-          <el-table-column label="操作" min-width="260">
+          <el-table-column label="操作" min-width="320">
             <template #default="scope">
               <div class="action-cell">
                 <button class="action-btn" @click="handleEdit(scope.row)">编辑</button>
@@ -74,6 +74,9 @@
                   :disabled="syncingIds.has(scope.row.id)">
                   <el-icon v-if="syncingIds.has(scope.row.id)" class="is-loading"><Loading /></el-icon>
                   {{ syncingIds.has(scope.row.id) ? '同步中' : '同步资料' }}
+                </button>
+                <button class="action-btn info" @click="handleOpenCreatorCenter(scope.row)">
+                  <el-icon><Link /></el-icon> 创作中心
                 </button>
                 <button class="action-btn info" @click="handleDownloadCookie(scope.row)">
                   <el-icon><Download /></el-icon> Cookie
@@ -109,7 +112,7 @@
               :class="['platform-card', { active: accountForm.platform === p.label, disabled: dialogType === 'edit' || sseConnecting }]"
               @click="selectPlatform(p.label)">
               <div class="platform-icon" :style="{ background: p.bg }">
-                <span :style="{ color: p.color }">{{ p.icon }}</span>
+                <img :src="p.logo" :alt="p.label" class="platform-logo-img" />
               </div>
               <div class="platform-name">{{ p.label }}</div>
             </div>
@@ -162,12 +165,13 @@
 
 <script setup>
 import { ref, reactive, computed, onMounted, onBeforeUnmount } from 'vue'
-import { Refresh, CircleCheckFilled, CircleCloseFilled, Download, Upload, Loading } from '@element-plus/icons-vue'
+import { Refresh, CircleCheckFilled, CircleCloseFilled, Download, Upload, Loading, Link } from '@element-plus/icons-vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { accountApi } from '@/api/account'
 import { useAccountStore } from '@/stores/account'
 import { useAppStore } from '@/stores/app'
 import { http } from '@/utils/request'
+import { platformList, platformNameToId, platformCssMap, getPlatformByName } from '@/config/platforms'
 
 const accountStore = useAccountStore()
 const appStore = useAppStore()
@@ -177,18 +181,16 @@ const searchKeyword = ref('')
 
 const filterOptions = [
   { label: '全部', value: 'all' },
-  { label: '抖音', value: '抖音' },
-  { label: '快手', value: '快手' },
-  { label: '视频号', value: '视频号' },
-  { label: '小红书', value: '小红书' }
+  ...platformList.map(p => ({ label: p.name, value: p.name }))
 ]
 
-const platformOptions = [
-  { label: '抖音', value: '3', icon: 'D', color: '#f43f5e', bg: 'rgba(244,63,94,0.15)' },
-  { label: '快手', value: '4', icon: 'K', color: '#f59e0b', bg: 'rgba(245,158,11,0.15)' },
-  { label: '视频号', value: '2', icon: 'V', color: '#3b82f6', bg: 'rgba(59,130,246,0.15)' },
-  { label: '小红书', value: '1', icon: 'X', color: '#8b5cf6', bg: 'rgba(139,92,246,0.15)' }
-]
+const platformOptions = platformList.map(p => ({
+  label: p.name,
+  value: String(p.id),
+  logo: p.logo,
+  color: p.color,
+  bg: p.bgColor,
+}))
 
 const fetchAccountsQuick = async () => {
   try {
@@ -227,14 +229,8 @@ onMounted(() => {
   fetchAccountsQuick()
 })
 
-const getPlatformTagType = (platform) => {
-  const typeMap = { '快手': 'success', '抖音': 'danger', '视频号': 'warning', '小红书': 'info' }
-  return typeMap[platform] || 'info'
-}
-
 const getPlatformClass = (platform) => {
-  const classMap = { '抖音': 'douyin', '快手': 'kuaishou', '视频号': 'channels', '小红书': 'xiaohongshu' }
-  return classMap[platform] || ''
+  return platformCssMap[platform] || ''
 }
 
 const getStatusClass = (status) => {
@@ -405,6 +401,20 @@ const getDefaultAvatar = (name) => {
   return `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=random`
 }
 
+const handleOpenCreatorCenter = async (row) => {
+  try {
+    const res = await http.post('/openCreatorCenter', { id: row.id })
+    if (res.code === 200) {
+      ElMessage.success('正在打开创作中心...')
+    } else {
+      ElMessage.error(res.msg || '打开失败')
+    }
+  } catch (error) {
+    console.error('打开创作中心失败:', error)
+    ElMessage.error('打开创作中心失败')
+  }
+}
+
 let eventSource = null
 
 const closeSSEConnection = () => {
@@ -417,8 +427,7 @@ const connectSSE = (platform) => {
   qrCodeData.value = ''
   loginStatus.value = ''
 
-  const platformTypeMap = { '小红书': '1', '视频号': '2', '抖音': '3', '快手': '4' }
-  const type = platformTypeMap[platform] || '1'
+  const type = platformNameToId[platform] ? String(platformNameToId[platform]) : '1'
   const baseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5409'
   // 使用 UUID 作为临时标识，不再需要用户输入名称
   const tempId = crypto.randomUUID()
@@ -487,8 +496,7 @@ const submitAccountForm = () => {
         connectSSE(accountForm.platform)
       } else {
         try {
-          const platformTypeMap = { '小红书': 1, '视频号': 2, '抖音': 3, '快手': 4 }
-          const type = platformTypeMap[accountForm.platform] || 1
+          const type = platformNameToId[accountForm.platform] || 1
           const res = await accountApi.updateAccount({ id: accountForm.id, type, userName: accountForm.name })
           if (res.code === 200) {
             accountStore.updateAccount(accountForm.id, { id: accountForm.id, name: accountForm.name, platform: accountForm.platform, status: accountForm.status })
@@ -656,6 +664,11 @@ onBeforeUnmount(() => { closeSSEConnection() })
           background: $platform-xiaohongshu-bg;
           color: $platform-xiaohongshu;
         }
+
+        &.bilibili {
+          background: $platform-bilibili-bg;
+          color: $platform-bilibili;
+        }
       }
 
       // Status tags
@@ -788,11 +801,11 @@ onBeforeUnmount(() => { closeSSEConnection() })
         display: flex;
         align-items: center;
         justify-content: center;
-        font-weight: 700;
-        font-size: 14px;
 
-        span {
-          font-weight: 700;
+        .platform-logo-img {
+          width: 20px;
+          height: 20px;
+          object-fit: contain;
         }
       }
 

@@ -84,7 +84,7 @@ def create_task():
         if not data.get(field):
             return jsonify({"code": 400, "msg": f"缺少必填字段: {field}"}), 400
 
-    platform_map = {1: "小红书", 2: "视频号", 3: "抖音", 4: "快手"}
+    platform_map = {1: "小红书", 2: "视频号", 3: "抖音", 4: "快手", 5: "B站"}
     platform_type = data['platformType']
 
     task = PublishTask(

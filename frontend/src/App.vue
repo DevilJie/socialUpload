@@ -1,33 +1,41 @@
 <template>
   <div class="layout">
-    <!-- Icon Rail -->
-    <div class="icon-rail">
-      <div class="rail-top">
+    <!-- Sidebar -->
+    <div class="sidebar" :class="{ expanded: !sidebarCollapsed }">
+      <div class="sidebar-top">
         <div class="logo">S</div>
+        <button class="toggle-btn" @click="sidebarCollapsed = !sidebarCollapsed">
+          <el-icon :size="16"><component :is="sidebarCollapsed ? Expand : Fold" /></el-icon>
+        </button>
       </div>
 
-      <div class="rail-nav">
-        <el-tooltip
-          v-for="item in navItems"
-          :key="item.path"
-          :content="item.title"
-          effect="dark"
-          placement="right"
-        >
+      <div class="sidebar-nav">
+        <template v-for="item in navItems" :key="item.path">
+          <el-tooltip v-if="sidebarCollapsed" :content="item.title" effect="dark" placement="right">
+            <div
+              class="nav-item"
+              :class="{ active: activeMenu === item.path }"
+              @click="router.push(item.path)"
+            >
+              <el-icon :size="20"><component :is="item.icon" /></el-icon>
+            </div>
+          </el-tooltip>
           <div
-            class="nav-item"
+            v-else
+            class="nav-item expanded-item"
             :class="{ active: activeMenu === item.path }"
             @click="router.push(item.path)"
           >
             <el-icon :size="20"><component :is="item.icon" /></el-icon>
+            <span class="nav-label">{{ item.title }}</span>
           </div>
-        </el-tooltip>
+        </template>
       </div>
 
-      <div class="rail-separator"></div>
+      <div class="sidebar-separator"></div>
 
-      <div class="rail-bottom">
-        <el-tooltip :content="settingsItem.title" effect="dark" placement="right">
+      <div class="sidebar-bottom">
+        <el-tooltip v-if="sidebarCollapsed" :content="settingsItem.title" effect="dark" placement="right">
           <div
             class="nav-item"
             :class="{ active: activeMenu === settingsItem.path }"
@@ -36,6 +44,15 @@
             <el-icon :size="20"><component :is="settingsItem.icon" /></el-icon>
           </div>
         </el-tooltip>
+        <div
+          v-else
+          class="nav-item expanded-item"
+          :class="{ active: activeMenu === settingsItem.path }"
+          @click="router.push(settingsItem.path)"
+        >
+          <el-icon :size="20"><component :is="settingsItem.icon" /></el-icon>
+          <span class="nav-label">{{ settingsItem.title }}</span>
+        </div>
       </div>
     </div>
 
@@ -60,17 +77,17 @@
 </template>
 
 <script setup>
-import { computed } from 'vue'
+import { ref, computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import {
   HomeFilled, User, Picture, Upload,
-  List, Clock, Setting
+  List, Clock, Setting, Expand, Fold
 } from '@element-plus/icons-vue'
 
 const route = useRoute()
 const router = useRouter()
 
-const iconMap = { HomeFilled, User, Picture, Upload, List, Clock, Setting }
+const sidebarCollapsed = ref(true)
 
 const navItems = [
   { path: '/', icon: HomeFilled, title: '仪表盘' },
@@ -96,8 +113,8 @@ const pageTitle = computed(() => route.meta?.title || '')
   height: 100vh;
 }
 
-// ---- Icon Rail ----
-.icon-rail {
+// ---- Sidebar ----
+.sidebar {
   width: 64px;
   background: rgba(255, 255, 255, 0.03);
   border-right: 1px solid $border;
@@ -106,9 +123,50 @@ const pageTitle = computed(() => route.meta?.title || '')
   align-items: center;
   padding: 12px 0;
   flex-shrink: 0;
+  transition: width $transition-slow;
+  overflow: hidden;
 
-  .rail-top {
+  &.expanded {
+    width: 200px;
+    align-items: stretch;
+    padding: 12px 12px;
+
+    .sidebar-top {
+      justify-content: space-between;
+      padding-right: 0;
+    }
+
+    .sidebar-nav {
+      align-items: stretch;
+    }
+
+    .nav-item.expanded-item {
+      width: 100%;
+      justify-content: flex-start;
+      padding: 0 12px;
+
+      .nav-label {
+        display: inline;
+        margin-left: 12px;
+      }
+    }
+
+    .sidebar-bottom {
+      align-items: stretch;
+    }
+
+    .sidebar-separator {
+      margin: 8px 0;
+      width: 100%;
+    }
+  }
+
+  .sidebar-top {
+    display: flex;
+    align-items: center;
     margin-bottom: 16px;
+    padding-right: 12px;
+    gap: 4px;
 
     .logo {
       width: 36px;
@@ -121,10 +179,31 @@ const pageTitle = computed(() => route.meta?.title || '')
       color: #fff;
       font-weight: 700;
       font-size: 16px;
+      flex-shrink: 0;
     }
   }
 
-  .rail-nav {
+  .toggle-btn {
+    width: 28px;
+    height: 28px;
+    border: none;
+    border-radius: $radius-sm;
+    background: transparent;
+    color: $text-muted;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: $transition-base;
+    flex-shrink: 0;
+
+    &:hover {
+      background: rgba(255, 255, 255, 0.06);
+      color: $text-secondary;
+    }
+  }
+
+  .sidebar-nav {
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -132,14 +211,14 @@ const pageTitle = computed(() => route.meta?.title || '')
     flex: 1;
   }
 
-  .rail-separator {
+  .sidebar-separator {
     height: 1px;
     background: $border;
     margin: 8px 12px;
     width: calc(100% - 24px);
   }
 
-  .rail-bottom {
+  .sidebar-bottom {
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -155,6 +234,7 @@ const pageTitle = computed(() => route.meta?.title || '')
     cursor: pointer;
     transition: $transition-base;
     color: $text-muted;
+    white-space: nowrap;
 
     &:hover {
       background: rgba(255, 255, 255, 0.06);
@@ -164,6 +244,12 @@ const pageTitle = computed(() => route.meta?.title || '')
     &.active {
       background: $gradient-brand;
       color: #fff;
+    }
+
+    .nav-label {
+      display: none;
+      font-size: 13px;
+      font-weight: 500;
     }
   }
 }

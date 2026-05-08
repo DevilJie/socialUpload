@@ -69,10 +69,7 @@
             @change="handleFilterChange"
           >
             <el-option label="全部" value="all" />
-            <el-option label="抖音" value="douyin" />
-            <el-option label="快手" value="kuaishou" />
-            <el-option label="视频号" value="channels" />
-            <el-option label="小红书" value="xiaohongshu" />
+            <el-option v-for="p in platformList" :key="p.key" :label="p.name" :value="p.key" />
           </el-select>
 
           <el-select
@@ -205,6 +202,7 @@
 import { ref, onMounted } from 'vue'
 import { Upload, CircleCheck, Calendar, Refresh, Clock } from '@element-plus/icons-vue'
 import { historyApi, statsApi } from '@/api/v2'
+import { platformList } from '@/config/platforms'
 
 const history = ref([])
 const stats = ref({ total: 0, successRate: 0, monthlyTotal: 0 })
@@ -282,12 +280,9 @@ const tableRowClassName = ({ row }) => {
 }
 
 // Platform helpers
-const platformMap = {
-  douyin: { label: '抖音', class: 'tag-douyin' },
-  kuaishou: { label: '快手', class: 'tag-kuaishou' },
-  channels: { label: '视频号', class: 'tag-channels' },
-  xiaohongshu: { label: '小红书', class: 'tag-xiaohongshu' },
-}
+const platformMap = Object.fromEntries(
+  platformList.map(p => [p.key, { label: p.name, class: `tag-${p.cssClass}` }])
+)
 
 const getPlatformLabel = (platform) => {
   return platformMap[platform]?.label || platform || '-'
@@ -590,6 +585,11 @@ onMounted(() => {
       &.tag-xiaohongshu {
         color: $platform-xiaohongshu;
         background: $platform-xiaohongshu-bg;
+      }
+
+      &.tag-bilibili {
+        color: $platform-bilibili;
+        background: $platform-bilibili-bg;
       }
     }
 
