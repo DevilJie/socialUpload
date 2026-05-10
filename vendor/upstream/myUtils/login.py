@@ -263,6 +263,22 @@ def get_browser_options():
     return options
 
 
+# 登录专用浏览器配置（始终使用有头模式以便用户扫码）
+def get_login_browser_options():
+    options = {
+        'headless': LOGIN_HEADLESS,
+        'args': [
+            '--disable-blink-features=AutomationControlled',
+            '--lang=zh-CN',
+            '--disable-infobars',
+            '--start-maximized'
+        ]
+    }
+    if LOCAL_CHROME_PATH:
+        options['executable_path'] = LOCAL_CHROME_PATH
+    return options
+
+
 # 抖音登录
 async def douyin_cookie_gen(id, status_queue):
     url_changed_event = asyncio.Event()
@@ -272,7 +288,7 @@ async def douyin_cookie_gen(id, status_queue):
             url_changed_event.set()
 
     async with async_playwright() as playwright:
-        options = get_browser_options()
+        options = get_login_browser_options()
         browser = await playwright.chromium.launch(**options)
         context = await browser.new_context()
         context = await set_init_script(context)
@@ -598,7 +614,7 @@ async def bilibili_cookie_gen(id, status_queue):
             url_changed_event.set()
 
     async with async_playwright() as playwright:
-        options = get_browser_options()
+        options = get_login_browser_options()
         browser = await playwright.chromium.launch(**options)
         context = await browser.new_context()
         context = await set_init_script(context)
