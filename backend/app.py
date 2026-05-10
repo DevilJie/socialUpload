@@ -1,4 +1,5 @@
 import json
+import os
 import sqlite3
 import uuid
 import sys
@@ -16,7 +17,16 @@ from sau_backend import app  # noqa: E402
 from ext_api import ext_api  # noqa: E402
 app.register_blueprint(ext_api)
 
-DB_PATH = Path(__file__).parent.parent / "data" / "db" / "database.db"
+
+def _get_db_path():
+    """Get DB path from SAU_DATA_DIR env var, with fallback."""
+    if data_dir := os.environ.get("SAU_DATA_DIR"):
+        return Path(data_dir) / "db" / "database.db"
+    # Fallback: dev environment (repo root/data/db/)
+    return Path(__file__).parent.parent / "data" / "db" / "database.db"
+
+
+DB_PATH = _get_db_path()
 PLATFORM_MAP = {1: "小红书", 2: "视频号", 3: "抖音", 4: "快手", 5: "B站"}
 
 
