@@ -66,7 +66,7 @@ fn main() {
     };
 
     // Log backend output in background
-    let log_file2 = log_file.try_clone().unwrap();
+    let mut log_file2 = log_file.try_clone().unwrap();
     if let Ok(mut child_guard) = child.lock() {
         if let Some(stdout) = child_guard.stdout.take() {
             std::thread::spawn(move || {
@@ -76,7 +76,7 @@ fn main() {
             });
         }
         if let Some(stderr) = child_guard.stderr.take() {
-            let log_file3 = log_file.try_clone().unwrap();
+            let mut log_file3 = log_file.try_clone().unwrap();
             std::thread::spawn(move || {
                 for line in BufReader::new(stderr).lines().map_while(Result::ok) {
                     writeln!(log_file3, "[{}] [backend error] {}", unix_ts(), line).unwrap();
