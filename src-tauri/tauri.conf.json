@@ -4,8 +4,6 @@
   "version": "0.1.0",
   "identifier": "com.example.ai-social-auto-upload",
   "build": {
-    "beforeDevCommand": "",
-    "devUrl": "http://localhost:5409",
     "beforeBuildCommand": "",
     "frontendDist": "../frontend/dist"
   },
@@ -29,6 +27,9 @@
   "bundle": {
     "active": true,
     "targets": ["nsis"],
+    "resources": {
+      "windows": ["python/*", "backend/*"]
+    },
     "icon": [
       "icons/32x32.png",
       "icons/128x128.png",
