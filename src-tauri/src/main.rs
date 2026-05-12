@@ -43,10 +43,12 @@ fn main() {
     writeln!(log_file, "[{}] INFO: Backend path: {:?}", unix_ts(), backend_path).unwrap();
 
     // Spawn Python backend
+    // PYTHONUNBUFFERED=1 ensures stdout/stderr are flushed immediately so logs appear in real-time
     let child = match Command::new(&python_path)
         .arg(&backend_path)
         .env("SAU_PORT", port.to_string())
         .env("SAU_DATA_DIR", data_dir.to_str().unwrap())
+        .env("PYTHONUNBUFFERED", "1")
         .stdout(Stdio::piped())
         .stderr(Stdio::piped())
         .spawn()
@@ -89,6 +91,26 @@ fn main() {
 
     let max_wait = 30;
     for i in 0..max_wait {
+        // Check if the Python process has already exited (crash)
+        if let Ok(mut c) = child.lock() {
+            match c.try_wait() {
+                Ok(Some(status)) => {
+                    let mut log_file = std::fs::OpenOptions::new().create(true).append(true).open(&log_path).unwrap();
+                    writeln!(log_file, "[{}] ERROR: Backend process exited prematurely with status: {}", unix_ts(), status).unwrap();
+                    std::thread::sleep(std::time::Duration::from_millis(500));
+                    // Dump the log file contents for diagnosis
+                    if let Ok(contents) = std::fs::read_to_string(&log_path) {
+                        eprintln!("=== app.log ===\n{}", contents);
+                    }
+                    std::process::exit(1);
+                }
+                Ok(None) => { /* still running, good */ }
+                Err(e) => {
+                    let mut log_file = std::fs::OpenOptions::new().create(true).append(true).open(&log_path).unwrap();
+                    writeln!(log_file, "[{}] ERROR: Failed to check backend process: {}", unix_ts(), e).unwrap();
+                }
+            }
+        }
         if std::net::TcpStream::connect(&backend_url[..]).is_ok() {
             let mut log_file = std::fs::OpenOptions::new().create(true).append(true).open(&log_path).unwrap();
             writeln!(log_file, "[{}] INFO: Backend ready after {} seconds", unix_ts(), i).unwrap();

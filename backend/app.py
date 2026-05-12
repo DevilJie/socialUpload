@@ -1,21 +1,31 @@
-import json
 import os
-import sqlite3
-import uuid
 import sys
-from datetime import datetime
 from pathlib import Path
 
-from flask import g, request
+print(f"[Startup] Python {sys.version} starting...")
+print(f"[Startup] Script: {__file__}")
+print(f"[Startup] SAU_PORT={os.environ.get('SAU_PORT')}, SAU_DATA_DIR={os.environ.get('SAU_DATA_DIR')}")
 
 UPSTREAM_DIR = Path(__file__).parent.parent / "vendor" / "upstream"
 sys.path.insert(1, str(UPSTREAM_DIR))
+print(f"[Startup] Upstream dir: {UPSTREAM_DIR} (exists={UPSTREAM_DIR.exists()})")
 
+print("[Startup] Importing sau_backend...")
 from sau_backend import app  # noqa: E402
+print("[Startup] sau_backend imported OK")
 
 # 注册阶段二扩展 API Blueprint
+print("[Startup] Importing ext_api...")
 from ext_api import ext_api  # noqa: E402
 app.register_blueprint(ext_api)
+print("[Startup] ext_api registered OK")
+
+import json
+import sqlite3
+import uuid
+from datetime import datetime
+
+from flask import g, request
 
 
 def _get_db_path():
