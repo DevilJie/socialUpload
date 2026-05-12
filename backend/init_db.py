@@ -21,7 +21,8 @@ def init_database():
         type INTEGER NOT NULL,
         filePath TEXT NOT NULL,
         userName TEXT NOT NULL,
-        status INTEGER DEFAULT 0
+        status INTEGER DEFAULT 0,
+        avatar TEXT DEFAULT ''
     )
     """)
     cursor.execute("""
@@ -85,6 +86,13 @@ def migrate_database():
     """增量迁移 — 添加新列（幂等）"""
     conn = sqlite3.connect(str(DB_PATH))
     cursor = conn.cursor()
+
+    # user_info 添加 avatar 列
+    try:
+        cursor.execute('ALTER TABLE user_info ADD COLUMN avatar TEXT DEFAULT ""')
+        print("已添加 avatar 列")
+    except sqlite3.OperationalError:
+        pass  # 列已存在
 
     # publish_tasks 添加 thumbnail_path 列
     try:
