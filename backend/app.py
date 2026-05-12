@@ -25,7 +25,19 @@ import sqlite3
 import uuid
 from datetime import datetime
 
-from flask import g, request
+from flask import g, request, send_from_directory
+
+# 覆盖 sau_backend 的前端静态文件路由，指向正确的前端目录
+# 打包后前端在 exe 同级的 frontend/ 目录
+FRONTEND_DIR = Path(__file__).parent.parent / "frontend"
+print(f"[Startup] Frontend dir: {FRONTEND_DIR} (exists={FRONTEND_DIR.exists()})")
+
+if FRONTEND_DIR.exists():
+    # 覆盖已有的 view functions，不重复注册路由
+    app.view_functions['index'] = lambda: send_from_directory(str(FRONTEND_DIR), 'index.html')
+    app.view_functions['custom_static'] = lambda filename: send_from_directory(str(FRONTEND_DIR / 'assets'), filename)
+    app.view_functions['favicon'] = lambda: send_from_directory(str(FRONTEND_DIR), 'favicon.ico')
+    app.view_functions['vite_svg'] = lambda: send_from_directory(str(FRONTEND_DIR), 'vite.svg')
 
 
 def _get_db_path():
