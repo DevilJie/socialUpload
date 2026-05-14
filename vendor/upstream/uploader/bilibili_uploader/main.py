@@ -121,6 +121,7 @@ class BilibiliVideo(BilibiliBaseUploader):
         desc: str | None = None,
         publish_strategy: str | None = None,
         ai_content: str | None = None,
+        creation_declaration: str | None = None,
         debug: bool = DEBUG_MODE,
         headless: bool = LOCAL_CHROME_HEADLESS,
     ):
@@ -145,6 +146,7 @@ class BilibiliVideo(BilibiliBaseUploader):
         self.thumbnail_path = thumbnail_path
         self.desc = desc or ""
         self.ai_content = ai_content or ""
+        self.creation_declaration = creation_declaration or ""
 
     async def validate_upload_args(self):
         await self.validate_base_args()
@@ -377,7 +379,7 @@ class BilibiliVideo(BilibiliBaseUploader):
         if not self.ai_content:
             return
 
-        bilibili_logger.info(_msg("📋", f"设置创作声明: {self.ai_content}"))
+        bilibili_logger.info(_msg("📋", f"设置声明与权益: {self.ai_content}"))
         try:
             log_dir = Path(__file__).parent.parent.parent.parent / "data" / "logs"
             log_dir.mkdir(parents=True, exist_ok=True)
@@ -385,7 +387,13 @@ class BilibiliVideo(BilibiliBaseUploader):
             # Step 1: 点击"更多设置"展开面板
             more_settings = page.locator('span.label:has-text("更多设置")')
             if await more_settings.count() > 0 and await more_settings.first.is_visible():
-                await more_settings.first.click()
+                try:
+                    await more_settings.first.click(timeout=5000)
+                except Exception:
+                    # 可能有 popover 遮挡，先按 Escape 关闭再重试
+                    await page.keyboard.press("Escape")
+                    await asyncio.sleep(0.5)
+                    await more_settings.first.click(force=True)
                 bilibili_logger.info(_msg("📋", "已点击'更多设置'"))
                 await asyncio.sleep(2)
             else:
@@ -424,6 +432,58 @@ class BilibiliVideo(BilibiliBaseUploader):
             if not clicked:
                 bilibili_logger.warning(_msg("⚠️", f"未找到匹配的声明: {target_text}"))
                 await page.screenshot(path=str(log_dir / "bilibili_declaration_not_matched.png"), full_page=True)
+
+            await asyncio.sleep(1)
+        except Exception as exc:
+            bilibili_logger.warning(_msg("⚠️", f"设置创作声明失败（不影响上传）: {exc}"))
+
+    async def _set_creation_declaration(self, page: Page):
+        """设置创作声明（bcc-select 下拉框：含AI生成内容等）
+        仅部分账号会显示此下拉框，未找到时静默跳过。
+        DOM: input.bcc-select-input-inner[placeholder*="创作声明"] -> li.bcc-option > span
+        """
+        if not self.creation_declaration:
+            return
+
+        bilibili_logger.info(_msg("📋", f"设置创作声明: {self.creation_declaration}"))
+        try:
+            # 先关闭可能遮挡的 popover
+            await page.keyboard.press("Escape")
+            await asyncio.sleep(0.5)
+
+            # 尝试查找创作声明下拉框（可能在主表单或"更多设置"面板内）
+            select_input = page.locator('input.bcc-select-input-inner[placeholder*="创作声明"]')
+            if await select_input.count() == 0:
+                bilibili_logger.info(_msg("📋", "当前账号无创作声明下拉框，跳过"))
+                return
+
+            await select_input.first.scroll_into_view_if_needed()
+            await asyncio.sleep(0.5)
+            await select_input.first.click(force=True)
+            bilibili_logger.info(_msg("📋", "已点击创作声明下拉框"))
+            await asyncio.sleep(1)
+
+            # 等待下拉选项出现，用 :visible 过滤隐藏的下拉列表
+            await page.wait_for_selector('li.bcc-option:visible', timeout=3000)
+            options = page.locator('li.bcc-option:visible')
+            count = await options.count()
+            bilibili_logger.info(_msg("📋", f"下拉选项数量: {count}"))
+
+            # 在展开的下拉列表中点击匹配的 bcc-option
+            target_text = self.creation_declaration.strip()
+            clicked = False
+            for i in range(count):
+                opt = options.nth(i)
+                span = opt.locator('span').first
+                opt_text = (await span.text_content() or "").strip()
+                if opt_text == target_text:
+                    await opt.click()
+                    bilibili_logger.success(_msg("✅", f"已选择创作声明: {opt_text}"))
+                    clicked = True
+                    break
+
+            if not clicked:
+                bilibili_logger.warning(_msg("⚠️", f"未找到匹配的创作声明选项: {target_text}"))
 
             await asyncio.sleep(1)
         except Exception as exc:
@@ -578,8 +638,11 @@ class BilibiliVideo(BilibiliBaseUploader):
             # 7. 设置封面
             await self._set_thumbnail(page)
 
-            # 8. 设置创作声明（如AI生成内容等）
+            # 8. 设置声明与权益
             await self._set_declaration(page)
+
+            # 8.5 设置创作声明（bcc-select 下拉框）
+            await self._set_creation_declaration(page)
 
             # 9. 设置定时发布
             if self.publish_strategy == BILIBILI_PUBLISH_STRATEGY_SCHEDULED and self.publish_date != 0:

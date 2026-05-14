@@ -92,9 +92,10 @@ if ($LASTEXITCODE -ne 0) {
 Write-Step "Python embedded distribution validated!"
 
 # Step 6.5: Install Playwright/patchright Chromium browser (bundled with app)
+# patchright is a patched fork of playwright — both share the same Chromium binary.
+# Only install via playwright to avoid duplicate browser downloads.
 Write-Step "Installing Playwright Chromium browser..."
 $env:PLAYWRIGHT_BROWSERS_PATH = Join-Path $PYTHON_DIR "ms-playwright"
-& $PYTHON_EXE -m patchright install chromium
 & $PYTHON_EXE -m playwright install chromium
 Remove-Item Env:PLAYWRIGHT_BROWSERS_PATH
 

@@ -808,7 +808,7 @@ const platformConfigs = reactive({
   douyin: { title: '', description: '', productTitle: '', productLink: '', aiContent: '', isOriginal: false, scheduleTime: '', visibility: 'public', allowDownload: true },
   xiaohongshu: { title: '', description: '', collection: '', groupChat: '', location: '', aiContent: '', isOriginal: false, scheduleTime: '' },
   kuaishou: { title: '', description: '', productTitle: '', productLink: '', aiContent: false, isOriginal: false, scheduleTime: '' },
-  bilibili: { title: '', description: '', zone: '', tags: '', topic: '', aiContent: '', isOriginal: false, scheduleTime: '' },
+  bilibili: { title: '', description: '', zone: '', tags: '', topic: '', aiContent: '', creationDeclaration: '', isOriginal: false, scheduleTime: '' },
   channels: { title: '', description: '', isDraft: false, location: '', aiContent: false, isOriginal: false },
 })
 
@@ -1405,6 +1405,7 @@ async function publishAll() {
         productTitle: platformSettings.productTitle || '',
         isDraft: platformSettings.isDraft || false,
         aiContent: platformSettings.aiContent || '',
+        creationDeclaration: platformSettings.creationDeclaration || '',
       }
 
       await http.post('/postVideo', publishData)

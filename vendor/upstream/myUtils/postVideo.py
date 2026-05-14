@@ -121,7 +121,7 @@ def post_video_xhs(title,files,tags,account_file,category=TencentZoneTypes.LIFES
 def post_video_bilibili(title, files, tags, account_file, category=None,
                         enableTimer=False, videos_per_day=1, daily_times=None,
                         start_days=0, desc='', thumbnailLandscape=None, thumbnailPortrait=None, schedule_time_str='',
-                        ai_content=''):
+                        ai_content='', creation_declaration=''):
     """B站视频上传 — 浏览器自动化方式"""
     from uploader.bilibili_uploader.main import BilibiliVideo
 
@@ -152,6 +152,7 @@ def post_video_bilibili(title, files, tags, account_file, category=None,
                 desc=desc,
                 thumbnail_path=thumbnail_path,
                 ai_content=ai_content,
+                creation_declaration=creation_declaration,
                 headless=False,
             )
             asyncio.run(app.main(), debug=False)

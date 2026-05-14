@@ -153,7 +153,7 @@ export const PLATFORMS = {
       ] },
       { key: 'tags', label: '标签', type: 'input', placeholder: '如：#标签1 #标签2 或 逗号分隔' },
       { key: 'topic', label: '话题', type: 'select', placeholder: '选择话题' },
-      { key: 'aiContent', label: '声明与权益', type: 'select', placeholder: '选择创作声明', options: [
+      { key: 'aiContent', label: '声明与权益', type: 'select', placeholder: '选择声明与权益', options: [
         { label: '该视频使用人工智能合成技术', value: '该视频使用人工智能合成技术' },
         { label: '视频内含有危险行为，请勿轻易模仿', value: '视频内含有危险行为，请勿轻易模仿' },
         { label: '该内容仅供娱乐，请勿过分解读', value: '该内容仅供娱乐，请勿过分解读' },
@@ -161,10 +161,18 @@ export const PLATFORMS = {
         { label: '请理性适度消费', value: '请理性适度消费' },
         { label: '个人观点，仅供参考', value: '个人观点，仅供参考' },
       ] },
+      { key: 'creationDeclaration', label: '创作声明', type: 'select', placeholder: '选择创作声明', options: [
+        { label: '内容无需标注', value: '内容无需标注' },
+        { label: '含AI生成内容', value: '含AI生成内容' },
+        { label: '含虚构演绎内容', value: '含虚构演绎内容' },
+        { label: '内容含营销信息', value: '内容含营销信息' },
+        { label: '个人观点，仅供参考', value: '个人观点，仅供参考' },
+        { label: '内容为转载', value: '内容为转载' },
+      ] },
       { key: 'isOriginal', label: '原创声明', type: 'radio', options: [{ label: '原创', value: true }, { label: '非原创', value: false }] },
       { key: 'scheduleTime', label: '定时发布', type: 'datetime', placeholder: '选择时间' },
     ],
-    defaultSettings: { title: '', description: '', zone: '', tags: '', topic: '', aiContent: '', isOriginal: false, scheduleTime: '' },
+    defaultSettings: { title: '', description: '', zone: '', tags: '', topic: '', aiContent: '', creationDeclaration: '', isOriginal: false, scheduleTime: '' },
   },
 }
 
