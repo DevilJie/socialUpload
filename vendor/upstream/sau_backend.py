@@ -466,7 +466,7 @@ def open_creator_center():
         cookie_path = str(Path(BASE_DIR / "cookiesFile" / cookie_file))
 
         def launch_browser():
-            from playwright.sync_api import sync_playwright
+            from patchright.sync_api import sync_playwright
             from conf import LOCAL_CHROME_PATH
             pw = sync_playwright().start()
             opts = {'headless': False}
