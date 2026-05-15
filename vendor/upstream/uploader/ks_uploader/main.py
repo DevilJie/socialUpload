@@ -12,6 +12,7 @@ from patchright.async_api import Playwright
 from patchright.async_api import async_playwright
 
 from conf import DEBUG_MODE, LOCAL_CHROME_HEADLESS, LOCAL_CHROME_PATH
+from myUtils.browser import create_browser, create_context
 from uploader.base_video import BaseVideoUploader
 from utils.files_times import get_absolute_path
 from utils.login_qrcode import build_login_qrcode_path
@@ -151,10 +152,7 @@ async def _is_ks_login_page_gone(page: Page) -> bool:
 
 async def cookie_auth(account_file):
     async with async_playwright() as playwright:
-        _opts = {'headless': True}
-        if LOCAL_CHROME_PATH:
-            _opts['executable_path'] = LOCAL_CHROME_PATH
-        browser = await playwright.chromium.launch(**_opts)
+        browser = await create_browser(playwright, headless=True)
         try:
             context = await browser.new_context(storage_state=account_file)
             page = await context.new_page()
@@ -197,10 +195,7 @@ async def get_ks_cookie(
         kuaishou_logger.info(_msg("🖼️", "快手登录将以无头模式运行，小人会输出终端二维码并保存本地二维码图片"))
 
     async with async_playwright() as playwright:
-        _opts = {'headless': headless}
-        if LOCAL_CHROME_PATH:
-            _opts['executable_path'] = LOCAL_CHROME_PATH
-        browser = await playwright.chromium.launch(**_opts)
+        browser = await create_browser(playwright, headless=headless)
         context = await browser.new_context()
         qrcode_path = None
         qrcode_info = None
@@ -416,11 +411,8 @@ class KSVideo(KSBaseUploader):
         await self.validate_upload_args()
         kuaishou_logger.info(_msg("🥳", "上传前检查通过"))
 
-        _opts = {'headless': self.headless}
-        if self.local_executable_path:
-            _opts['executable_path'] = self.local_executable_path
-        browser = await playwright.chromium.launch(**_opts)
-        context = await browser.new_context(storage_state=self.account_file)
+        browser = await create_browser(playwright, headless=self.headless)
+        context = await create_context(browser, storage_state=self.account_file)
 
         upload_success = False
         try:
@@ -655,11 +647,8 @@ class KSNote(KSBaseUploader):
         await self.validate_upload_args()
         kuaishou_logger.info(_msg("🥳", "图文上传前检查通过"))
 
-        _opts = {'headless': self.headless}
-        if self.local_executable_path:
-            _opts['executable_path'] = self.local_executable_path
-        browser = await playwright.chromium.launch(**_opts)
-        context = await browser.new_context(storage_state=self.account_file)
+        browser = await create_browser(playwright, headless=self.headless)
+        context = await create_context(browser, storage_state=self.account_file)
 
         upload_success = False
         try:
