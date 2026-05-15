@@ -438,6 +438,9 @@ def open_creator_center():
         3: "https://creator.douyin.com/",
         4: "https://cp.kuaishou.com/article/publish/video",
         5: "https://member.bilibili.com/platform/upload-manager/article",
+        6: "https://baijiahao.baidu.com/",
+        7: "https://www.tiktok.com/tiktokstudio/upload?lang=en",
+        8: "https://studio.youtube.com/",
     }
 
     try:

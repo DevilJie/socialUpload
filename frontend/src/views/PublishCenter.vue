@@ -810,6 +810,9 @@ const platformConfigs = reactive({
   kuaishou: { title: '', description: '', productTitle: '', productLink: '', aiContent: false, isOriginal: false, scheduleTime: '' },
   bilibili: { title: '', description: '', zone: '', tags: '', topic: '', aiContent: '', creationDeclaration: '', isOriginal: false, scheduleTime: '' },
   channels: { title: '', description: '', isDraft: false, location: '', aiContent: false, isOriginal: false },
+  baijiahao: { title: '', description: '', aiContent: false, isOriginal: false },
+  tiktok: { title: '', description: '', aiContent: false, isOriginal: false, scheduleTime: '' },
+  youtube: { title: '', description: '', isOriginal: false, aiContent: false, scheduleTime: '' },
 })
 
 const currentSettings = computed(() =>
