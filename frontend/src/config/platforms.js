@@ -11,6 +11,9 @@ import logoKuaishou from '@/assets/logos/logo-kuaishou.svg'
 import logoXiaohongshu from '@/assets/logos/logo-xiaohongshu.svg'
 import logoChannels from '@/assets/logos/logo-channels.svg'
 import logoBilibili from '@/assets/logos/logo-bilibili.svg'
+import logoBaijiahao from '@/assets/logos/logo-baijiahao.svg'
+import logoTiktok from '@/assets/logos/logo-tiktok.svg'
+import logoYoutube from '@/assets/logos/logo-youtube.svg'
 
 export const PLATFORMS = {
   XIAOHONGSHU: {
@@ -173,6 +176,58 @@ export const PLATFORMS = {
       { key: 'scheduleTime', label: '定时发布', type: 'datetime', placeholder: '选择时间' },
     ],
     defaultSettings: { title: '', description: '', zone: '', tags: '', topic: '', aiContent: '', creationDeclaration: '', isOriginal: false, scheduleTime: '' },
+  },
+  BAIJIAHAO: {
+    id: 6,
+    key: 'baijiahao',
+    name: '百家号',
+    shortName: 'BJH',
+    letter: 'B',
+    logo: logoBaijiahao,
+    color: '#e64e3a',
+    bgColor: 'rgba(230, 78, 58, 0.15)',
+    cssClass: 'baijiahao',
+    creatorUrl: 'https://baijiahao.baidu.com/',
+    settingsFields: [
+      { key: 'aiContent', label: 'AI生成内容', type: 'switch' },
+      { key: 'isOriginal', label: '原创声明', type: 'radio', options: [{ label: '原创', value: true }, { label: '非原创', value: false }] },
+    ],
+    defaultSettings: { title: '', description: '', aiContent: false, isOriginal: false },
+  },
+  TIKTOK: {
+    id: 7,
+    key: 'tiktok',
+    name: 'TikTok',
+    shortName: 'TT',
+    letter: 'T',
+    logo: logoTiktok,
+    color: '#000000',
+    bgColor: 'rgba(0, 0, 0, 0.15)',
+    cssClass: 'tiktok',
+    creatorUrl: 'https://www.tiktok.com/tiktokstudio/upload?lang=en',
+    settingsFields: [
+      { key: 'aiContent', label: 'AI生成内容', type: 'switch' },
+      { key: 'scheduleTime', label: '定时发布', type: 'datetime', placeholder: '选择时间' },
+    ],
+    defaultSettings: { title: '', description: '', aiContent: false, scheduleTime: '' },
+  },
+  YOUTUBE: {
+    id: 8,
+    key: 'youtube',
+    name: 'YouTube',
+    shortName: 'YT',
+    letter: 'Y',
+    logo: logoYoutube,
+    color: '#ff0000',
+    bgColor: 'rgba(255, 0, 0, 0.15)',
+    cssClass: 'youtube',
+    creatorUrl: 'https://studio.youtube.com/',
+    settingsFields: [
+      { key: 'isOriginal', label: '原创声明', type: 'radio', options: [{ label: '原创', value: true }, { label: '非原创', value: false }] },
+      { key: 'aiContent', label: 'AI生成内容', type: 'switch' },
+      { key: 'scheduleTime', label: '定时发布', type: 'datetime', placeholder: '选择时间' },
+    ],
+    defaultSettings: { title: '', description: '', isOriginal: false, aiContent: false, scheduleTime: '' },
   },
 }
 
