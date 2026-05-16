@@ -531,8 +531,8 @@ class BilibiliVideo(BilibiliBaseUploader):
                 bilibili_logger.warning(_msg("⚠️", "所有封面触发器均未成功，跳过封面设置"))
                 return
 
-            # 等待封面编辑器弹窗出现
-            dialog = page.locator('div.cover-editor.bcc-dialog__wrap').first
+            # 等待封面编辑器弹窗出现（B站弹窗 DOM: div.bcc-dialog）
+            dialog = page.locator('div.bcc-dialog:has-text("封面制作")').first
             await dialog.wait_for(state="visible", timeout=15000)
             bilibili_logger.info(_msg("✅", "封面编辑器弹窗已打开"))
             await asyncio.sleep(1)
@@ -540,7 +540,34 @@ class BilibiliVideo(BilibiliBaseUploader):
             # 截图查看弹窗状态
             await page.screenshot(path=str(log_dir / "bilibili_cover_editor.png"), full_page=True)
 
-            # Step 2: 直接上传封面文件（隐藏 input 在弹窗内）
+            # Step 2: 点击4:3区域选中它（首页推荐封面）
+            editor_4_3 = page.locator('div.cover-editor-panel-canvas-image.editor_4_3').first
+            if await editor_4_3.count() > 0:
+                await editor_4_3.click()
+                bilibili_logger.info(_msg("🖼️", "已点击选中4:3封面区域"))
+                await asyncio.sleep(0.5)
+            else:
+                bilibili_logger.warning(_msg("⚠️", "未找到4:3封面区域，继续后续步骤"))
+
+            # Step 3: 勾选"双比例同步改动"复选框
+            sync_checkbox = page.locator('.sync-checkbox input[type="checkbox"]').first
+            if await sync_checkbox.count() > 0:
+                is_checked = await sync_checkbox.is_checked()
+                if not is_checked:
+                    # 点击 label 或 checkbox 的父级来切换状态
+                    sync_label = page.locator('.sync-checkbox').first
+                    await sync_label.click()
+                    bilibili_logger.info(_msg("✅", "已勾选'双比例同步改动'"))
+                else:
+                    bilibili_logger.info(_msg("✅", "'双比例同步改动'已经是勾选状态"))
+                await asyncio.sleep(0.5)
+            else:
+                bilibili_logger.warning(_msg("⚠️", "未找到'双比例同步改动'复选框"))
+
+            # 截图确认选择状态
+            await page.screenshot(path=str(log_dir / "bilibili_cover_sync_checked.png"), full_page=True)
+
+            # Step 4: 上传封面文件（隐藏 input 在弹窗内）
             # .cover-upload .bcc-upload-wrapper > input[type="file"]
             file_input = page.locator('.cover-upload input[type="file"]').first
             file_count = await file_input.count()
@@ -563,8 +590,8 @@ class BilibiliVideo(BilibiliBaseUploader):
             bilibili_logger.info(_msg("⏳", "等待封面图片上传处理..."))
             await asyncio.sleep(3)
 
-            # Step 3: 点击弹窗内"完成"按钮
-            submit_btn = page.locator('div.cover-editor div.button.submit').first
+            # Step 5: 点击弹窗内"完成"按钮
+            submit_btn = page.locator('div.button.submit').first
             submit_count = await submit_btn.count()
             bilibili_logger.info(_msg("🔍", f"完成按钮: {submit_count} 个"))
             if submit_count > 0:
@@ -574,8 +601,8 @@ class BilibiliVideo(BilibiliBaseUploader):
                 bilibili_logger.warning(_msg("⚠️", "未找到完成按钮"))
             await asyncio.sleep(1)
 
-            # Step 4: 点击弹窗外层"确定"按钮
-            confirm_btn = page.locator('div.cover-editor button.bcc-button--primary').first
+            # Step 6: 点击弹窗外层"确定"按钮
+            confirm_btn = page.locator('button.bcc-button--primary').first
             confirm_count = await confirm_btn.count()
             bilibili_logger.info(_msg("🔍", f"确定按钮: {confirm_count} 个"))
             if confirm_count > 0:
