@@ -380,6 +380,7 @@
                 v-model="currentSettings[field.key]"
                 type="datetime"
                 :placeholder="field.placeholder"
+                value-format="YYYY-MM-DD HH:mm:ss"
                 size="small"
                 class="cursor-pointer"
               />

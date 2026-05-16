@@ -55,8 +55,11 @@ request.interceptors.response.use(
         case 404:
           ElMessage.error('请求地址不存在')
           break
-        case 500:
-          ElMessage.error('服务器内部错误')
+        case 500: {
+          const errMsg = error.response?.data?.msg || error.response?.data?.message || '服务器内部错误'
+          ElMessage.error(errMsg)
+          break
+        }
           break
         default:
           ElMessage.error('网络错误')

@@ -15,12 +15,18 @@ def _parse_schedule_time(schedule_time_str, total_files, enableTimer, videos_per
     """解析用户指定的定时发布时间，如果没有则自动生成"""
     if enableTimer and schedule_time_str:
         try:
-            # 前端传来的格式可能是 ISO 字符串或 "YYYY-MM-DD HH:mm:ss"
-            # 尝试多种格式解析
+            raw = str(schedule_time_str)
+            # 兼容 UTC ISO 格式（前端旧版可能传 2026-05-16T13:00:00.000Z）
+            is_utc = raw.endswith("Z") or "+00:00" in raw
+            raw_clean = raw.replace("+08:00", "").replace("+00:00", "")
+
             for fmt in ("%Y-%m-%dT%H:%M:%S.%fZ", "%Y-%m-%dT%H:%M:%SZ",
                         "%Y-%m-%dT%H:%M:%S", "%Y-%m-%d %H:%M:%S", "%Y-%m-%d %H:%M"):
                 try:
-                    dt = datetime.strptime(str(schedule_time_str).replace("+08:00", "").replace("+00:00", ""), fmt)
+                    dt = datetime.strptime(raw_clean, fmt)
+                    if is_utc:
+                        from datetime import timedelta
+                        dt = dt + timedelta(hours=8)
                     print(f"[定时发布] 使用用户指定时间: {dt}")
                     return [dt] * total_files
                 except ValueError:
@@ -81,7 +87,7 @@ def post_video_DouYin(title,files,tags,account_file,category=TencentZoneTypes.LI
             asyncio.run(app.douyin_upload_video(), debug=False)
 
 
-def post_video_ks(title,files,tags,account_file,category=TencentZoneTypes.LIFESTYLE.value,enableTimer=False,videos_per_day = 1, daily_times=None,start_days = 0, thumbnail_path=None, desc='', schedule_time_str=''):
+def post_video_ks(title,files,tags,account_file,category=TencentZoneTypes.LIFESTYLE.value,enableTimer=False,videos_per_day = 1, daily_times=None,start_days = 0, thumbnail_path=None, desc='', schedule_time_str='', author_declaration=''):
     # 生成文件的完整路径
     account_file = [Path(BASE_DIR / "cookiesFile" / file) for file in account_file]
     files = [Path(BASE_DIR / "videoFile" / file) for file in files]
@@ -95,7 +101,7 @@ def post_video_ks(title,files,tags,account_file,category=TencentZoneTypes.LIFEST
             print(f"标题：{title}")
             print(f"描述：{desc}")
             print(f"Hashtag：{tags}")
-            app = KSVideo(title, str(file), tags, publish_datetimes[index], cookie, thumbnail_path=thumbnail_path, desc=desc or None, headless=False)
+            app = KSVideo(title, str(file), tags, publish_datetimes[index], cookie, thumbnail_path=thumbnail_path, desc=desc or None, headless=False, author_declaration=author_declaration)
             asyncio.run(app.main(), debug=False)
 
 def post_video_xhs(title,files,tags,account_file,category=TencentZoneTypes.LIFESTYLE.value,enableTimer=False,videos_per_day = 1, daily_times=None,start_days = 0, thumbnail_path=None, desc='', schedule_time_str='', ai_content=''):

@@ -605,7 +605,7 @@ def postVideo():
                           start_days, thumbnail_landscape_path=thumbnail_landscape_path, thumbnail_portrait_path=thumbnail_portrait_path, productLink=productLink, productTitle=productTitle, desc=desc, schedule_time_str=schedule_time_str, ai_content=ai_content)
             case 4:
                 post_video_ks(title, file_list, tags, account_list, category, enableTimer, videos_per_day, daily_times,
-                          start_days, thumbnail_path=thumbnail_portrait_path or thumbnail_path, desc=desc, schedule_time_str=schedule_time_str)
+                          start_days, thumbnail_path=thumbnail_landscape_path or thumbnail_path, desc=desc, schedule_time_str=schedule_time_str, author_declaration=ai_content)
             case 5:
                 post_video_bilibili(title, file_list, tags, account_list, category, enableTimer, videos_per_day, daily_times,
                           start_days, desc=desc, thumbnailLandscape=thumbnail_landscape_path, schedule_time_str=schedule_time_str, ai_content=ai_content, creation_declaration=creation_declaration)
