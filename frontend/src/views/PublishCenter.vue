@@ -799,9 +799,6 @@ const commonConfig = reactive({
   topics: [],
 })
 
-// Active video index for player
-const activeVideoIdx = ref(0)
-
 // Cover upload target: 'landscape' or 'portrait'
 const coverUploadTarget = ref('landscape')
 
@@ -1067,14 +1064,6 @@ function triggerUploadVideo(target = 'landscape') {
 function triggerUploadCover(target = 'landscape') {
   coverUploadTarget.value = target
   coverUploadDialogVisible.value = true
-}
-
-function captureFromVideo() {
-  if (commonConfig.fileList.length === 0) {
-    ElMessage.warning('请先上传视频')
-    return
-  }
-  ElMessage.info('视频截取功能开发中')
 }
 
 function clearVideo(type) {
@@ -2028,134 +2017,6 @@ function formatSize(bytes) {
 
 .btn-icon {
   margin-right: 4px;
-}
-
-// ----- Video Empty -----
-.video-empty {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 32px 0;
-  gap: 10px;
-
-  .empty-icon {
-    color: $text-muted;
-    opacity: 0.4;
-  }
-
-  .empty-text {
-    font-size: 13px;
-    color: $text-muted;
-  }
-
-  .empty-actions {
-    display: flex;
-    gap: 8px;
-    margin-top: 6px;
-  }
-}
-
-// ----- Video Filled (player + sidebar) -----
-.video-filled {
-  display: flex;
-  gap: 16px;
-  min-height: 220px;
-
-  .video-player-wrap {
-    flex: 1;
-    min-width: 0;
-    border-radius: $radius-base;
-    overflow: hidden;
-    background: #000;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-
-    .video-player {
-      width: 100%;
-      max-height: 300px;
-      display: block;
-      outline: none;
-    }
-  }
-
-  .video-sidebar {
-    width: 200px;
-    flex-shrink: 0;
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-
-    .video-file-list {
-      flex: 1;
-      overflow-y: auto;
-      display: flex;
-      flex-direction: column;
-      gap: 4px;
-    }
-
-    .video-file-item {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      padding: 6px 8px;
-      border-radius: $radius-sm;
-      background: rgba(255, 255, 255, 0.03);
-      border: 1px solid transparent;
-      cursor: pointer;
-      transition: $transition-base;
-      font-size: 12px;
-
-      &:hover {
-        background: rgba(255, 255, 255, 0.06);
-      }
-
-      &.active {
-        border-color: $brand-start;
-        background: rgba(139, 92, 246, 0.08);
-      }
-
-      .file-name {
-        flex: 1;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-        color: $text-primary;
-      }
-
-      .file-size {
-        font-size: 10px;
-        color: $text-muted;
-        flex-shrink: 0;
-      }
-
-      .remove-icon {
-        color: $text-muted;
-        opacity: 0;
-        transition: $transition-fast;
-        font-size: 12px;
-
-        &:hover {
-          color: $danger-color;
-        }
-      }
-
-      &:hover .remove-icon {
-        opacity: 1;
-      }
-    }
-
-    .video-actions {
-      display: flex;
-      flex-direction: column;
-      gap: 6px;
-
-      .cover-action-btn {
-        justify-content: center;
-      }
-    }
-  }
 }
 
 // ----- Video Dual Card Grid -----
