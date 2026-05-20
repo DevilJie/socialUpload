@@ -339,7 +339,7 @@
                       >{{ opt.label }}</span>
                     </label>
                   </div>
-                  <div v-if="!commonConfig.videoLandscape && !commonConfig.videoPortrait" class="setting-desc" style="font-size: 12px; color: $text-muted;">
+                  <div v-if="!commonConfig.videoLandscape && !commonConfig.videoPortrait" class="setting-desc" style="font-size: 12px;">
                     请先上传视频
                   </div>
                 </div>
@@ -883,41 +883,42 @@ function hasAccountOverride(accountId) {
 }
 
 // 当前账号的设置（合并渠道默认 + 账号覆盖）
-const resolvedAccountSettings = computed(() => {
-  const platformKey = selectedPlatform.value
-  if (!platformKey) return {}
-  const platform = platformConfigs[platformKey] || {}
+const resolvedAccountSettings = computed({
+  get: () => {
+    const platformKey = selectedPlatform.value
+    if (!platformKey) return {}
+    const platform = platformConfigs[platformKey] || {}
 
-  if (selectedAccountId.value) {
-    const override = accountOverrides[selectedAccountId.value]
-    if (override && Object.keys(override).length > 0) {
-      return {
-        ...platform,
-        ...Object.fromEntries(
-          Object.entries(override).filter(([_, v]) => v !== undefined && v !== '' && v !== false)
-        ),
+    if (selectedAccountId.value) {
+      const override = accountOverrides[selectedAccountId.value]
+      if (override && Object.keys(override).length > 0) {
+        return {
+          ...platform,
+          ...Object.fromEntries(
+            Object.entries(override).filter(([_, v]) => v !== undefined && v !== '' && v !== false)
+          ),
+        }
       }
     }
-  }
-  return platform
-})
-
-// 监听账号设置变化，自动写入 accountOverrides
-watch(resolvedAccountSettings, (settings) => {
-  if (!selectedAccountId.value || !selectedPlatform.value) return
-  const platform = platformConfigs[selectedPlatform.value] || {}
-  const diff = {}
-  for (const key of Object.keys(settings)) {
-    if (settings[key] !== platform[key]) {
-      diff[key] = settings[key]
+    // Always return a copy to avoid mutating platformConfigs directly
+    return { ...platform }
+  },
+  set: (newVal) => {
+    if (!selectedAccountId.value || !selectedPlatform.value) return
+    const platform = platformConfigs[selectedPlatform.value] || {}
+    const diff = {}
+    for (const key of Object.keys(newVal)) {
+      if (newVal[key] !== platform[key]) {
+        diff[key] = newVal[key]
+      }
     }
-  }
-  if (Object.keys(diff).length > 0) {
-    accountOverrides[selectedAccountId.value] = diff
-  } else {
-    delete accountOverrides[selectedAccountId.value]
-  }
-}, { deep: true })
+    if (Object.keys(diff).length > 0) {
+      accountOverrides[selectedAccountId.value] = diff
+    } else {
+      delete accountOverrides[selectedAccountId.value]
+    }
+  },
+})
 
 function getAccountName(accountId) {
   const account = accountStore.accounts.find(a => a.id === accountId)
