@@ -187,7 +187,7 @@ def _override_post_video():
         return jsonify({"code": 400, "msg": "不支持的平台类型"}), 400
 
     try:
-        asyncio.run(platform.publish_video(
+        platform.publish_video(
             title=data.get('title'),
             files=data.get('fileList', []),
             tags=data.get('tags'),
@@ -210,7 +210,7 @@ def _override_post_video():
             is_draft=data.get('isDraft', False),
             audience=data.get('audience', 'not_kids'),
             altered_content=data.get('alteredContent', False),
-        ))
+        )
         return jsonify({"code": 200, "msg": "发布任务已提交", "data": None}), 200
     except Exception as e:
         print(f"发布视频时出错: {str(e)}")
@@ -227,7 +227,7 @@ def _override_post_video_batch():
         if not platform:
             return jsonify({"code": 400, "msg": "不支持的平台类型"}), 400
 
-        asyncio.run(platform.publish_video(
+        platform.publish_video(
             title=data.get('title'),
             files=data.get('fileList', []),
             tags=data.get('tags'),
@@ -250,7 +250,7 @@ def _override_post_video_batch():
             is_draft=data.get('isDraft', False),
             audience=data.get('audience', 'not_kids'),
             altered_content=data.get('alteredContent', False),
-        ))
+        )
 
     return jsonify({"code": 200, "msg": None, "data": None}), 200
 

@@ -69,7 +69,7 @@ class TiktokPlatform(BasePlatform):
         thread = threading.Thread(target=_launch, daemon=True)
         thread.start()
 
-    async def publish_video(self, **kwargs) -> bool:
+    def publish_video(self, **kwargs) -> bool:
         """Publish a video to TikTok.
 
         Accepted keyword arguments (passed through to ``post_video_tiktok``):

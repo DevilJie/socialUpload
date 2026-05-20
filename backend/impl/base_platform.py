@@ -112,7 +112,7 @@ class BasePlatform(ABC):
         ...
 
     @abstractmethod
-    async def publish_video(self, **kwargs) -> bool:
+    def publish_video(self, **kwargs) -> bool:
         """Publish a video to the platform.  Returns True on success."""
         ...
 
