@@ -11,10 +11,10 @@ from queue import Queue
 
 from conf import BASE_DIR
 
-from backend.impl.base_platform import BasePlatform
+from ..base_platform import BasePlatform
 from myUtils.auth import cookie_auth_douyin
 from myUtils.login import douyin_cookie_gen, sync_account_profile
-from postVideo import post_video_DouYin
+from myUtils.postVideo import post_video_DouYin
 
 
 class DouyinPlatform(BasePlatform):
