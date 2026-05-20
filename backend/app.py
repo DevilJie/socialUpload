@@ -378,7 +378,7 @@ def _before_publish():
             account_name=account_name,
             video_path=file_list[0] if file_list else '',
             title=data.get('title', ''),
-            desc=data.get('description', ''),
+            description=data.get('description', ''),
             tags=data.get('tags', []),
             status='running',
             started_at=now,
