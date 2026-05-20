@@ -51,9 +51,11 @@ def _populate_registry() -> None:
         (8, ".youtube.uploader", "YoutubePlatform"),
     ]
 
+    import importlib
+
     for pid, mod_path, cls_name in imports:
         try:
-            mod = __import__(mod_path, fromlist=[cls_name], package=__package__)
+            mod = importlib.import_module(mod_path, package=__package__)
             cls = getattr(mod, cls_name)
             register(pid, cls)
         except (ImportError, AttributeError):
