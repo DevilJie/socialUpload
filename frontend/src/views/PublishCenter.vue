@@ -1750,28 +1750,28 @@ function formatSize(bytes) {
     }
 
     .platform-badge {
-      width: 22px;
-      height: 22px;
+      width: 26px;
+      height: 26px;
       border-radius: 6px;
       display: flex;
       align-items: center;
       justify-content: center;
       color: #fff;
-      font-size: 11px;
+      font-size: 12px;
       font-weight: 700;
       flex-shrink: 0;
       overflow: hidden;
 
       .platform-badge-img {
-        width: 16px;
-        height: 16px;
+        width: 20px;
+        height: 20px;
         object-fit: contain;
       }
     }
 
     .group-name {
       flex: 1;
-      font-size: 13px;
+      font-size: 14px;
       color: $text-secondary;
       font-weight: 500;
       overflow: hidden;
@@ -2625,12 +2625,12 @@ function formatSize(bytes) {
       overflow-y: auto;
 
       .dialog-platform-item {
-        padding: 10px 12px;
-        font-size: 13px;
+        padding: 12px 14px;
+        font-size: 14px;
         color: $text-secondary;
         display: flex;
         align-items: center;
-        gap: 8px;
+        gap: 10px;
         transition: $transition-base;
 
         &:hover {
@@ -2644,21 +2644,21 @@ function formatSize(bytes) {
         }
 
         .dialog-platform-badge {
-          width: 18px;
-          height: 18px;
+          width: 22px;
+          height: 22px;
           border-radius: 4px;
           display: flex;
           align-items: center;
           justify-content: center;
           color: #fff;
-          font-size: 9px;
+          font-size: 10px;
           font-weight: 700;
           flex-shrink: 0;
           overflow: hidden;
 
           .dialog-platform-badge-img {
-            width: 14px;
-            height: 14px;
+            width: 17px;
+            height: 17px;
             object-fit: contain;
           }
         }
