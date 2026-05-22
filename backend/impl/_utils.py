@@ -321,9 +321,13 @@ async def scrape_baijiahao_profile(page):
 async def scrape_youtube_profile(page):
     """YouTube-specific scraper.
 
-    Targets ``div#entity-name`` for the channel name and images containing
-    ``ggpht.com`` or ``googleusercontent`` for the avatar.  Falls back to
-    the page title if the entity-name selector fails.
+    YouTube Studio uses Polymer Shadow DOM. The channel name appears in
+    ``ytcp-ve`` elements and the avatar uses Google profile image URLs.
+
+    Strategy:
+      1. Try button[id="avatar-button"] + adjacent span for name (Studio header)
+      2. Scan all ``<img>`` for ``ggpht.com`` / ``googleusercontent`` URLs
+      3. Fallback to page title
 
     Returns:
         tuple[str, str]: (user_name, avatar_url)
@@ -334,25 +338,52 @@ async def scrape_youtube_profile(page):
         await page.wait_for_load_state('networkidle', timeout=15000)
         await asyncio.sleep(5)
 
-        # Channel name: div#entity-name
-        name_el = page.locator('div#entity-name').first
-        if await name_el.count():
-            name = (await name_el.text_content() or '').strip()
-
-        # Avatar: img containing ggpht.com / googleusercontent
-        all_imgs = page.locator('img')
-        count = await all_imgs.count()
-        for i in range(count):
-            img = all_imgs.nth(i)
-            src = (await img.get_attribute('src') or '')
-            alt = (await img.get_attribute('alt') or '')
-            if 'ggpht.com' in src or 'googleusercontent' in src:
-                avatar = src
-                if not name and alt and len(alt) < 50:
+        # Strategy 1: Avatar button in Studio header contains channel info
+        avatar_btn = page.locator('button[id="avatar-button"]')
+        if await avatar_btn.count():
+            # The avatar image is inside the button
+            btn_img = avatar_btn.locator('img')
+            if await btn_img.count():
+                src = (await btn_img.get_attribute('src') or '').strip()
+                if src:
+                    avatar = src
+                alt = (await btn_img.get_attribute('alt') or '').strip()
+                if alt and len(alt) < 50:
                     name = alt
-                break
+            # aria-label often contains "账号: <channel name>"
+            if not name:
+                aria = (await avatar_btn.get_attribute('aria-label') or '').strip()
+                if aria:
+                    # e.g. "账号: MyChannel" or "Account: MyChannel"
+                    for sep in (':', '：'):
+                        if sep in aria:
+                            candidate = aria.split(sep, 1)[1].strip()
+                            if candidate:
+                                name = candidate
+                                break
 
-        # Fallback: extract name from page title
+        # Strategy 2: div#entity-name (present in some Studio views)
+        if not name:
+            name_el = page.locator('div#entity-name').first
+            if await name_el.count():
+                name = (await name_el.text_content() or '').strip()
+
+        # Strategy 3: Scan all images for Google profile URLs
+        if not avatar:
+            all_imgs = page.locator('img')
+            count = await all_imgs.count()
+            for i in range(count):
+                img = all_imgs.nth(i)
+                src = (await img.get_attribute('src') or '')
+                if 'ggpht.com' in src or 'googleusercontent.com' in src:
+                    avatar = src
+                    if not name:
+                        alt = (await img.get_attribute('alt') or '').strip()
+                        if alt and len(alt) < 50:
+                            name = alt
+                    break
+
+        # Fallback: page title ("Channel Name - YouTube Studio")
         if not name:
             title = await page.title()
             if ' - ' in title:

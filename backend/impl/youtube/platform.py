@@ -185,15 +185,12 @@ class YoutubePlatform(BasePlatform):
     # ------------------------------------------------------------------
 
     async def sync_profile(self, cookie_file: str) -> tuple:
-        """Sync profile info (name, avatar) from YouTube Studio.
-
-        Uses headed mode because Google blocks headless access.
-        """
+        """Sync profile info (name, avatar) from YouTube Studio."""
         cookie_path = str(Path(BASE_DIR / "cookiesFile" / cookie_file))
         browser = None
         try:
             browser = await self.create_browser(
-                headless=False, proxy=self._get_proxy(),
+                headless=True, proxy=self._get_proxy(),
             )
             context = await self.create_context(browser, storage_state=cookie_path)
             page = await context.new_page()
