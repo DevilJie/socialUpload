@@ -9,12 +9,15 @@ All functions use standard Playwright Page/Context APIs only.
 
 import asyncio
 import json
+import logging
 import sqlite3
 import uuid
 from datetime import datetime, timedelta
 from pathlib import Path
 
 from conf import BASE_DIR
+
+logger = logging.getLogger(__name__)
 
 # ---------------------------------------------------------------------------
 # JS injection script for generic profile scraping
@@ -208,13 +211,13 @@ async def scrape_user_profile(page):
         name = result.get('name', '')
         avatar = result.get('avatar', '')
         debug = result.get('debug', [])
-        print(f"[scrape] candidates: {debug}")
+        logger.info(f"[scrape] candidates: {debug}")
         if name:
-            print(f"[scrape] found profile - name: {name}, avatar: {avatar[:50] if avatar else 'N/A'}")
+            logger.info(f"[scrape] found profile - name: {name}, avatar: {avatar[:50] if avatar else 'N/A'}")
         else:
-            print("[scrape] could not find user name, will use default")
+            logger.info("[scrape] could not find user name, will use default")
     except Exception as e:
-        print(f"[scrape] failed to scrape user profile: {e}")
+        logger.info(f"[scrape] failed to scrape user profile: {e}")
 
     return name, avatar
 
@@ -242,11 +245,11 @@ async def scrape_bilibili_profile(page):
         if await avatar_el.count():
             avatar = (await avatar_el.get_attribute('src') or '').strip()
         if name:
-            print(f"[bilibili] profile scraped - name: {name}, avatar: {avatar[:50] if avatar else 'N/A'}")
+            logger.info(f"[bilibili] profile scraped - name: {name}, avatar: {avatar[:50] if avatar else 'N/A'}")
         else:
-            print("[bilibili] profile scrape failed, will use default name")
+            logger.info("[bilibili] profile scrape failed, will use default name")
     except Exception as e:
-        print(f"[bilibili] profile scrape error: {e}")
+        logger.info(f"[bilibili] profile scrape error: {e}")
     return name, avatar
 
 
@@ -273,11 +276,11 @@ async def scrape_tencent_profile(page):
         if await name_el.count():
             name = (await name_el.text_content() or '').strip()
         if name:
-            print(f"[channels] profile scraped - name: {name}, avatar: {avatar[:50] if avatar else 'N/A'}")
+            logger.info(f"[channels] profile scraped - name: {name}, avatar: {avatar[:50] if avatar else 'N/A'}")
         else:
-            print("[channels] profile scrape failed, will use default name")
+            logger.info("[channels] profile scrape failed, will use default name")
     except Exception as e:
-        print(f"[channels] profile scrape error: {e}")
+        logger.info(f"[channels] profile scrape error: {e}")
     return name, avatar
 
 
@@ -312,9 +315,9 @@ async def scrape_baijiahao_profile(page):
         if await name_el.count():
             name = (await name_el.text_content() or '').strip()
 
-        print(f"[baijiahao] profile scraped - name={name!r} avatar={avatar[:50] if avatar else 'None'}")
+        logger.info(f"[baijiahao] profile scraped - name={name!r} avatar={avatar[:50] if avatar else 'None'}")
     except Exception as e:
-        print(f"[baijiahao] profile scrape error: {e}")
+        logger.info(f"[baijiahao] profile scrape error: {e}")
     return name, avatar
 
 
@@ -391,9 +394,9 @@ async def scrape_youtube_profile(page):
                 if candidate and candidate != 'YouTube':
                     name = candidate
 
-        print(f"[youtube] profile scraped - name={name!r} avatar={avatar[:50] if avatar else 'None'}")
+        logger.info(f"[youtube] profile scraped - name={name!r} avatar={avatar[:50] if avatar else 'None'}")
     except Exception as e:
-        print(f"[youtube] profile scrape error: {e}")
+        logger.info(f"[youtube] profile scrape error: {e}")
     return name, avatar
 
 
@@ -439,13 +442,13 @@ def parse_schedule_time(schedule_time_str, total_files, enableTimer,
                     dt = datetime.strptime(raw_clean, fmt)
                     if is_utc:
                         dt = dt + timedelta(hours=8)
-                    print(f"[schedule] using user-specified time: {dt}")
+                    logger.info(f"[schedule] using user-specified time: {dt}")
                     return [dt] * total_files
                 except ValueError:
                     continue
-            print(f"[schedule] cannot parse time '{schedule_time_str}', falling back to auto-generation")
+            logger.info(f"[schedule] cannot parse time '{schedule_time_str}', falling back to auto-generation")
         except Exception as e:
-            print(f"[schedule] error parsing time: {e}, falling back to auto-generation")
+            logger.info(f"[schedule] error parsing time: {e}, falling back to auto-generation")
 
     # No user-specified time: auto-generate
     if enableTimer:
@@ -494,7 +497,7 @@ async def save_login_result(
 
     # 2. Save cookie file
     uuid_v1 = uuid.uuid1()
-    print(f"UUID v1: {uuid_v1}")
+    logger.info(f"UUID v1: {uuid_v1}")
     cookies_dir = Path(BASE_DIR / "cookiesFile")
     cookies_dir.mkdir(exist_ok=True)
     cookie_filename = f"{uuid_v1}.json"
@@ -511,7 +514,7 @@ async def save_login_result(
             (platform_id, cookie_filename, user_name, 1, avatar_url),
         )
         conn.commit()
-        print(f"[login] {platform_name} user record saved")
+        logger.info(f"[login] {platform_name} user record saved")
 
     # 4. Send SSE status
     status_queue.put(json.dumps({

@@ -6,11 +6,14 @@ Uses ``BasePlatform`` browser entry points and shared utilities from
 """
 
 import asyncio
+import logging
 import threading
 from pathlib import Path
 from queue import Queue
 
 from conf import BASE_DIR
+
+logger = logging.getLogger(__name__)
 
 from .._browser import create_browser_sync
 from .._utils import parse_schedule_time, save_login_result, scrape_user_profile
@@ -71,12 +74,18 @@ class KuaishouPlatform(BasePlatform):
             qrcode_img = page.locator('img[name="qrcode"], div.qr-login img[alt="qrcode"]').first
             await qrcode_img.wait_for(state="visible", timeout=30000)
             qrcode_src = await qrcode_img.get_attribute("src")
-            print(f"[kuaishou] QR code ready, waiting for scan...")
+            logger.info(f"[kuaishou] QR code ready, waiting for scan...")
 
-            # Monitor URL change — login redirects to upload page
+            # Monitor URL change — login redirects to profile or upload page
+            _KS_LOGGED_IN_URLS = (
+                _KS_UPLOAD_URL,                          # /article/publish/video
+                "https://cp.kuaishou.com/profile",       # personal profile
+                "https://cp.kuaishou.com/rest/app",      # app dashboard
+                "https://cp.kuaishou.com/article/manage", # manage page
+            )
             current_url = page.url
             for _ in range(200):  # ~600 seconds
-                if page.url.startswith(_KS_UPLOAD_URL):
+                if any(page.url.startswith(u) for u in _KS_LOGGED_IN_URLS):
                     break
                 # Check for QR expiry and refresh
                 expired = page.locator("div.qrcode-status.qrcode-status-timeout:visible").first
@@ -87,7 +96,7 @@ class KuaishouPlatform(BasePlatform):
                         await asyncio.sleep(1)
                 await asyncio.sleep(3)
             else:
-                print("[kuaishou] login timed out waiting for scan")
+                logger.info("[kuaishou] login timed out waiting for scan")
                 return
 
             # Navigate to upload page to ensure profile data is loaded
@@ -103,7 +112,7 @@ class KuaishouPlatform(BasePlatform):
                 scrape_fn=scrape_user_profile,
             )
         except Exception as exc:
-            print(f"[kuaishou] login error: {exc}")
+            logger.info(f"[kuaishou] login error: {exc}")
             status_queue.put('{"status": "0", "error": "' + str(exc) + '"}')
         finally:
             try:
@@ -137,14 +146,14 @@ class KuaishouPlatform(BasePlatform):
                     _COOKIE_INVALID_SELECTOR, timeout=5000
                 )
                 # Selector found means the login page appeared → cookie invalid
-                print("[kuaishou] cookie invalid — login page shown")
+                logger.info("[kuaishou] cookie invalid — login page shown")
                 return False
             except Exception:
                 # Selector not found → we stayed on the upload page → valid
-                print("[kuaishou] cookie valid")
+                logger.info("[kuaishou] cookie valid")
                 return True
         except Exception as exc:
-            print(f"[kuaishou] cookie check error: {exc}")
+            logger.info(f"[kuaishou] cookie check error: {exc}")
             return False
         finally:
             try:
@@ -171,7 +180,7 @@ class KuaishouPlatform(BasePlatform):
             await page.wait_for_load_state("domcontentloaded")
             return await scrape_user_profile(page)
         except Exception as exc:
-            print(f"[kuaishou] sync_profile error: {exc}")
+            logger.info(f"[kuaishou] sync_profile error: {exc}")
             return ("", "")
         finally:
             try:
@@ -304,7 +313,7 @@ class KuaishouPlatform(BasePlatform):
 
             await page.goto(_KS_UPLOAD_URL)
             await page.wait_for_url(_KS_UPLOAD_URL_PATTERN)
-            print(f"[kuaishou] uploading: {title}")
+            logger.info(f"[kuaishou] uploading: {title}")
 
             # ------ Upload video via file chooser ------
             upload_button = page.locator("button[class^='_upload-btn']")
@@ -329,7 +338,7 @@ class KuaishouPlatform(BasePlatform):
             await self._close_guide_overlay(page)
 
             # ------ Fill description + tags ------
-            print("[kuaishou] filling description and tags")
+            logger.info("[kuaishou] filling description and tags")
             await page.get_by_text("描述").locator("xpath=following-sibling::div").click()
             await page.keyboard.press("Backspace")
             await page.keyboard.press("Control+KeyA")
@@ -338,7 +347,7 @@ class KuaishouPlatform(BasePlatform):
             await page.keyboard.press("Enter")
 
             for tag in tags[:3]:
-                print(f"[kuaishou] adding tag: #{tag}")
+                logger.info(f"[kuaishou] adding tag: #{tag}")
                 await page.keyboard.type(f"#{tag} ")
                 await asyncio.sleep(2)
 
@@ -347,12 +356,12 @@ class KuaishouPlatform(BasePlatform):
             while retry < 60:
                 try:
                     if await page.locator("text=上传中").count() == 0:
-                        print("[kuaishou] video upload complete")
+                        logger.info("[kuaishou] video upload complete")
                         break
                     if retry % 5 == 0:
-                        print("[kuaishou] still uploading...")
+                        logger.info("[kuaishou] still uploading...")
                     if await page.locator("text=上传失败").count():
-                        print("[kuaishou] upload failed, retrying...")
+                        logger.info("[kuaishou] upload failed, retrying...")
                         await page.locator(
                             'div.progress-div [class^="upload-btn-input"]'
                         ).set_input_files(video_path)
@@ -386,10 +395,10 @@ class KuaishouPlatform(BasePlatform):
                         await confirm_btn.click()
 
                     await page.wait_for_url(_KS_MANAGE_URL_PATTERN, timeout=5000)
-                    print("[kuaishou] video published successfully")
+                    logger.info("[kuaishou] video published successfully")
                     break
                 except Exception as exc:
-                    print(f"[kuaishou] publish retry: {exc}")
+                    logger.info(f"[kuaishou] publish retry: {exc}")
                     await asyncio.sleep(1)
 
             upload_success = True
@@ -397,7 +406,7 @@ class KuaishouPlatform(BasePlatform):
             if upload_success:
                 try:
                     await context.storage_state(path=cookie_path)
-                    print("[kuaishou] cookie updated")
+                    logger.info("[kuaishou] cookie updated")
                 except Exception:
                     pass
                 await asyncio.sleep(2)
@@ -456,7 +465,7 @@ class KuaishouPlatform(BasePlatform):
         Flow: click cover area -> modal -> "上传封面" tab -> upload ->
         select 4:3 ratio -> confirm.
         """
-        print("[kuaishou] setting thumbnail")
+        logger.info("[kuaishou] setting thumbnail")
         try:
             # 1. Click cover area
             cover_area = page.locator("div[class*='default-cover']").first
@@ -502,9 +511,9 @@ class KuaishouPlatform(BasePlatform):
             except Exception:
                 pass
 
-            print("[kuaishou] thumbnail set")
+            logger.info("[kuaishou] thumbnail set")
         except Exception as exc:
-            print(f"[kuaishou] thumbnail failed (non-fatal): {exc}")
+            logger.info(f"[kuaishou] thumbnail failed (non-fatal): {exc}")
 
     # ------------------------------------------------------------------
     # Helper: set author declaration (ant-select dropdown)
@@ -513,7 +522,7 @@ class KuaishouPlatform(BasePlatform):
     @staticmethod
     async def _set_author_declaration(page, author_declaration: str):
         """Set author declaration via ant-select dropdown."""
-        print(f"[kuaishou] setting author declaration: {author_declaration}")
+        logger.info(f"[kuaishou] setting author declaration: {author_declaration}")
         try:
             select_clicked = False
 
@@ -558,7 +567,7 @@ class KuaishouPlatform(BasePlatform):
                             break
 
             if not select_clicked:
-                print("[kuaishou] author declaration dropdown not found, skipping")
+                logger.info("[kuaishou] author declaration dropdown not found, skipping")
                 return
 
             await asyncio.sleep(1)
@@ -569,10 +578,10 @@ class KuaishouPlatform(BasePlatform):
             ).first
             await option.wait_for(state="visible", timeout=5000)
             await option.click()
-            print(f"[kuaishou] author declaration set: {author_declaration}")
+            logger.info(f"[kuaishou] author declaration set: {author_declaration}")
             await asyncio.sleep(1)
         except Exception as exc:
-            print(f"[kuaishou] author declaration failed (non-fatal): {exc}")
+            logger.info(f"[kuaishou] author declaration failed (non-fatal): {exc}")
 
     # ------------------------------------------------------------------
     # Helper: set schedule time (ant-radio + ant-picker)
@@ -581,7 +590,7 @@ class KuaishouPlatform(BasePlatform):
     @staticmethod
     async def _set_schedule_time(page, publish_date):
         """Set scheduled publish time via ant-radio and ant-picker."""
-        print(f"[kuaishou] setting schedule time: {publish_date}")
+        logger.info(f"[kuaishou] setting schedule time: {publish_date}")
         date_str = publish_date.strftime("%Y-%m-%d %H:%M:%S")
 
         # Select the "scheduled" radio option (second one)

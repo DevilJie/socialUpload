@@ -7,6 +7,7 @@ CloakBrowser via ``_browser.py``.
 """
 
 import asyncio
+import logging
 import os
 import re
 import threading
@@ -14,6 +15,8 @@ from pathlib import Path
 from queue import Queue
 
 from conf import BASE_DIR
+
+logger = logging.getLogger(__name__)
 
 from .._browser import create_browser_sync
 from .._utils import parse_schedule_time, save_login_result, scrape_bilibili_profile
@@ -83,13 +86,13 @@ class BilibiliPlatform(BasePlatform):
                     qr_img = page.get_by_role("img").nth(0)
                     src = await qr_img.get_attribute("src")
             except Exception as e:
-                print(f"[bilibili] failed to locate QR code: {e}")
+                logger.info(f"[bilibili] failed to locate QR code: {e}")
 
             if src:
-                print(f"[bilibili] QR code URL: {src[:80]}")
+                logger.info(f"[bilibili] QR code URL: {src[:80]}")
                 status_queue.put(src)
             else:
-                print("[bilibili] QR code image not found")
+                logger.info("[bilibili] QR code image not found")
                 status_queue.put("500")
                 await page.close()
                 await context.close()
@@ -105,10 +108,10 @@ class BilibiliPlatform(BasePlatform):
 
             try:
                 await asyncio.wait_for(url_changed_event.wait(), timeout=200)
-                print("[bilibili] login page navigation detected")
+                logger.info("[bilibili] login page navigation detected")
             except asyncio.TimeoutError:
                 status_queue.put("500")
-                print("[bilibili] login page navigation timeout")
+                logger.info("[bilibili] login page navigation timeout")
                 await page.close()
                 await context.close()
                 return
@@ -152,12 +155,12 @@ class BilibiliPlatform(BasePlatform):
             try:
                 await page.wait_for_url("**/platform/**", timeout=5000)
                 if "passport.bilibili.com" in page.url:
-                    print("[bilibili] cookie expired, needs re-login")
+                    logger.info("[bilibili] cookie expired, needs re-login")
                     return False
-                print("[bilibili] cookie valid")
+                logger.info("[bilibili] cookie valid")
                 return True
             except Exception:
-                print("[bilibili] cookie check timed out (5s)")
+                logger.info("[bilibili] cookie check timed out (5s)")
                 return False
             finally:
                 await page.close()
@@ -183,7 +186,7 @@ class BilibiliPlatform(BasePlatform):
                 name, avatar = await scrape_bilibili_profile(page)
                 return name, avatar
             except Exception as e:
-                print(f"[bilibili] sync profile failed: {e}")
+                logger.info(f"[bilibili] sync profile failed: {e}")
                 return "", ""
             finally:
                 await page.close()
@@ -294,10 +297,10 @@ class BilibiliPlatform(BasePlatform):
                     else publish_datetimes
                 )
                 for cookie_path in cookie_paths:
-                    print(f"[bilibili] uploading: {file_path}")
-                    print(f"[bilibili] title: {title}")
-                    print(f"[bilibili] desc: {desc}")
-                    print(f"[bilibili] tags: {tags}")
+                    logger.info(f"[bilibili] uploading: {file_path}")
+                    logger.info(f"[bilibili] title: {title}")
+                    logger.info(f"[bilibili] desc: {desc}")
+                    logger.info(f"[bilibili] tags: {tags}")
 
                     await self._upload_single_video(
                         title=title,
@@ -345,7 +348,7 @@ class BilibiliPlatform(BasePlatform):
             upload_success = False
             try:
                 page = await context.new_page()
-                print(f"[bilibili] starting upload: {title}")
+                logger.info(f"[bilibili] starting upload: {title}")
                 await page.goto(BILIBILI_UPLOAD_URL)
                 await page.wait_for_url(
                     "**/platform/upload/**", timeout=30000
@@ -414,7 +417,7 @@ class BilibiliPlatform(BasePlatform):
                 )
 
                 # 10. Submit
-                print("[bilibili] submitting video")
+                logger.info("[bilibili] submitting video")
                 await page.evaluate(
                     "window.scrollTo(0, document.body.scrollHeight)"
                 )
@@ -427,9 +430,9 @@ class BilibiliPlatform(BasePlatform):
                         if await submit_span.count() > 0:
                             await submit_span.first.scroll_into_view_if_needed()
                             await submit_span.first.click()
-                            print("[bilibili] clicked submit button")
+                            logger.info("[bilibili] clicked submit button")
                         else:
-                            print(
+                            logger.info(
                                 f"[bilibili] submit button not found, "
                                 f"retry {attempt + 1}/10"
                             )
@@ -444,7 +447,7 @@ class BilibiliPlatform(BasePlatform):
                                 > 0
                             )
                             if not btn_exists:
-                                print(
+                                logger.info(
                                     "[bilibili] submit success "
                                     "(button disappeared)"
                                 )
@@ -454,7 +457,7 @@ class BilibiliPlatform(BasePlatform):
                                 page.url != BILIBILI_UPLOAD_URL
                                 and "/platform/upload/" not in page.url
                             ):
-                                print(
+                                logger.info(
                                     f"[bilibili] submit success, "
                                     f"redirected to: {page.url}"
                                 )
@@ -464,7 +467,7 @@ class BilibiliPlatform(BasePlatform):
                         if submitted:
                             break
 
-                        print(
+                        logger.info(
                             f"[bilibili] page unchanged after click, "
                             f"retry {attempt + 1}/10"
                         )
@@ -475,7 +478,7 @@ class BilibiliPlatform(BasePlatform):
                             full_page=True,
                         )
                     except Exception as exc:
-                        print(
+                        logger.info(
                             f"[bilibili] submit retry {attempt + 1}/10: {exc}"
                         )
                         await page.screenshot(
@@ -487,13 +490,13 @@ class BilibiliPlatform(BasePlatform):
                         await asyncio.sleep(2)
 
                 if not submitted:
-                    print(
+                    logger.info(
                         "[bilibili] could not confirm submission, "
                         "but it may have succeeded"
                     )
 
                 if submitted:
-                    print("[bilibili] waiting 10s for processing")
+                    logger.info("[bilibili] waiting 10s for processing")
                     await asyncio.sleep(10)
                     try:
                         await page.screenshot(
@@ -510,13 +513,13 @@ class BilibiliPlatform(BasePlatform):
                 if upload_success:
                     try:
                         await context.storage_state(path=account_file)
-                        print("[bilibili] cookie updated")
+                        logger.info("[bilibili] cookie updated")
                     except Exception:
                         pass
                 await context.close()
         finally:
             await browser.close()
-            print("[bilibili] browser closed")
+            logger.info("[bilibili] browser closed")
 
     # ------------------------------------------------------------------
     # Upload sub-steps
@@ -525,7 +528,7 @@ class BilibiliPlatform(BasePlatform):
     @staticmethod
     async def _upload_video_file(page, file_path: str):
         """Select the video file via iframe or direct file input."""
-        print("[bilibili] uploading video file")
+        logger.info("[bilibili] uploading video file")
 
         file_input = None
         try:
@@ -534,7 +537,7 @@ class BilibiliPlatform(BasePlatform):
             await input_in_frame.wait_for(state="attached", timeout=5000)
             file_input = input_in_frame
         except Exception:
-            print("[bilibili] upload iframe not found, trying main page")
+            logger.info("[bilibili] upload iframe not found, trying main page")
 
         if file_input is None:
             file_input = page.locator(
@@ -543,7 +546,7 @@ class BilibiliPlatform(BasePlatform):
             await file_input.wait_for(state="attached", timeout=10000)
 
         await file_input.set_input_files(file_path)
-        print("[bilibili] video file selected, waiting for upload")
+        logger.info("[bilibili] video file selected, waiting for upload")
 
     @staticmethod
     async def _wait_upload_complete(page):
@@ -562,7 +565,7 @@ class BilibiliPlatform(BasePlatform):
                         await done_text.count() > 0
                         and await done_text.first.is_visible()
                     ):
-                        print("[bilibili] video upload complete")
+                        logger.info("[bilibili] video upload complete")
                         return
                 except Exception:
                     pass
@@ -573,34 +576,34 @@ class BilibiliPlatform(BasePlatform):
                     await done_text_main.count() > 0
                     and await done_text_main.first.is_visible()
                 ):
-                    print("[bilibili] video upload complete")
+                    logger.info("[bilibili] video upload complete")
                     return
 
                 # Check for upload failure
                 fail_text = page.locator("text=上传失败")
                 if await fail_text.count() > 0:
-                    print(
+                    logger.info(
                         "[bilibili] upload failed detected"
                     )
 
                 if retry_count % 10 == 0:
-                    print(
+                    logger.info(
                         f"[bilibili] upload in progress... ({retry_count * 3}s)"
                     )
 
                 await asyncio.sleep(3)
             except Exception as exc:
-                print(f"[bilibili] upload status check error: {exc}")
+                logger.info(f"[bilibili] upload status check error: {exc}")
                 await asyncio.sleep(3)
             retry_count += 1
 
         if retry_count == max_retries:
-            print("[bilibili] upload may not have completed (timeout)")
+            logger.info("[bilibili] upload may not have completed (timeout)")
 
     @staticmethod
     async def _fill_title(page, title: str):
         """Fill the video title (max 80 chars)."""
-        print(f"[bilibili] filling title: {title[:30]}")
+        logger.info(f"[bilibili] filling title: {title[:30]}")
         title_input = page.locator(
             'input[placeholder*="标题"], input[placeholder*="Title"], '
             '.video-title input, [class*="title"] input[type="text"]'
@@ -622,13 +625,13 @@ class BilibiliPlatform(BasePlatform):
         else:
             cn_name = str(category).strip()
 
-        print(
+        logger.info(
             f"[bilibili] setting category: category={category}, "
             f"cn_name={cn_name}"
         )
 
         if not cn_name:
-            print(
+            logger.info(
                 f"[bilibili] unknown category: {category}, skipping"
             )
             return
@@ -641,7 +644,7 @@ class BilibiliPlatform(BasePlatform):
             select_controller = page.locator(".select-controller").first
             await select_controller.wait_for(state="visible", timeout=10000)
             await select_controller.click()
-            print("[bilibili] clicked select-controller")
+            logger.info("[bilibili] clicked select-controller")
             await asyncio.sleep(1)
 
             # Click target partition in dropdown
@@ -650,9 +653,9 @@ class BilibiliPlatform(BasePlatform):
             )
             if await target_item.count() > 0:
                 await target_item.first.click()
-                print(f"[bilibili] category set: {cn_name}")
+                logger.info(f"[bilibili] category set: {cn_name}")
             else:
-                print(
+                logger.info(
                     f"[bilibili] partition not found in dropdown: {cn_name}"
                 )
                 await page.screenshot(
@@ -664,7 +667,7 @@ class BilibiliPlatform(BasePlatform):
 
             await asyncio.sleep(1)
         except Exception as exc:
-            print(
+            logger.info(
                 f"[bilibili] category setting failed (non-fatal): {exc}"
             )
 
@@ -685,7 +688,7 @@ class BilibiliPlatform(BasePlatform):
                 parsed.append(t)
         tags = parsed
 
-        print(f"[bilibili] adding {len(tags)} tags")
+        logger.info(f"[bilibili] adding {len(tags)} tags")
 
         log_dir = Path(BASE_DIR / "data" / "logs")
         log_dir.mkdir(parents=True, exist_ok=True)
@@ -706,13 +709,13 @@ class BilibiliPlatform(BasePlatform):
                 loc = page.locator(sel).first
                 if await loc.count() > 0 and await loc.is_visible():
                     tag_input = loc
-                    print(f"[bilibili] found tag input: {sel}")
+                    logger.info(f"[bilibili] found tag input: {sel}")
                     break
             except Exception:
                 continue
 
         if tag_input is None:
-            print("[bilibili] tag input not found, taking debug screenshot")
+            logger.info("[bilibili] tag input not found, taking debug screenshot")
             await page.screenshot(
                 path=str(log_dir / "bilibili_tag_input_not_found.png"),
                 full_page=True,
@@ -732,7 +735,7 @@ class BilibiliPlatform(BasePlatform):
                     except Exception:
                         continue
                 if current_input is None:
-                    print("[bilibili] tag input lost, stopping")
+                    logger.info("[bilibili] tag input lost, stopping")
                     break
 
                 await current_input.click()
@@ -741,12 +744,12 @@ class BilibiliPlatform(BasePlatform):
                 await asyncio.sleep(0.3)
                 await current_input.press("Enter")
                 await asyncio.sleep(0.5)
-                print(
+                logger.info(
                     f"[bilibili] added tag ({i + 1}/{min(len(tags), 10)}): "
                     f"{tag}"
                 )
             except Exception as exc:
-                print(f"[bilibili] failed to add tag '{tag}': {exc}")
+                logger.info(f"[bilibili] failed to add tag '{tag}': {exc}")
 
     @staticmethod
     async def _fill_desc(page, desc: str):
@@ -754,7 +757,7 @@ class BilibiliPlatform(BasePlatform):
         if not desc:
             return
 
-        print("[bilibili] filling description")
+        logger.info("[bilibili] filling description")
         desc_editor = page.locator(
             '[contenteditable="true"][class*="editor"], '
             ".ql-editor, "
@@ -767,7 +770,7 @@ class BilibiliPlatform(BasePlatform):
             await page.keyboard.press("Delete")
             await page.keyboard.type(desc, delay=10)
         else:
-            print("[bilibili] description editor not found")
+            logger.info("[bilibili] description editor not found")
 
     @staticmethod
     async def _set_thumbnail(page, thumbnail_path: str | None):
@@ -775,11 +778,11 @@ class BilibiliPlatform(BasePlatform):
         if not thumbnail_path:
             return
         if not os.path.exists(thumbnail_path):
-            print(f"[bilibili] cover file not found: {thumbnail_path}")
+            logger.info(f"[bilibili] cover file not found: {thumbnail_path}")
             return
 
         log_dir = Path(BASE_DIR / "data" / "logs")
-        print("[bilibili] setting cover")
+        logger.info("[bilibili] setting cover")
 
         try:
             await page.screenshot(
@@ -811,7 +814,7 @@ class BilibiliPlatform(BasePlatform):
                         continue
 
             if not dialog_opened:
-                print(
+                logger.info(
                     "[bilibili] all cover triggers failed, "
                     "skipping cover"
                 )
@@ -861,7 +864,7 @@ class BilibiliPlatform(BasePlatform):
 
             if file_count > 0:
                 await file_input.set_input_files(thumbnail_path)
-                print(
+                logger.info(
                     f"[bilibili] cover file selected: "
                     f"{os.path.basename(thumbnail_path)}"
                 )
@@ -872,7 +875,7 @@ class BilibiliPlatform(BasePlatform):
                 if await fallback_input.count() > 0:
                     await fallback_input.set_input_files(thumbnail_path)
                 else:
-                    print("[bilibili] cover file input not found")
+                    logger.info("[bilibili] cover file input not found")
                     return
 
             # Wait for image processing
@@ -896,7 +899,7 @@ class BilibiliPlatform(BasePlatform):
             await page.keyboard.press("Escape")
             await asyncio.sleep(0.5)
 
-            print("[bilibili] cover set successfully")
+            logger.info("[bilibili] cover set successfully")
 
         except Exception as exc:
             try:
@@ -914,7 +917,7 @@ class BilibiliPlatform(BasePlatform):
         if not ai_content:
             return
 
-        print(f"[bilibili] setting declaration: {ai_content}")
+        logger.info(f"[bilibili] setting declaration: {ai_content}")
         try:
             log_dir = Path(BASE_DIR / "data" / "logs")
             log_dir.mkdir(parents=True, exist_ok=True)
@@ -933,7 +936,7 @@ class BilibiliPlatform(BasePlatform):
                     await more_settings.first.click(force=True)
                 await asyncio.sleep(2)
             else:
-                print("[bilibili] 'more settings' button not found")
+                logger.info("[bilibili] 'more settings' button not found")
                 return
 
             # Step 2: Click declaration selector
@@ -948,7 +951,7 @@ class BilibiliPlatform(BasePlatform):
                 await declaration_selector.first.click()
                 await asyncio.sleep(1)
             else:
-                print("[bilibili] declaration selector not found")
+                logger.info("[bilibili] declaration selector not found")
                 return
 
             # Step 3: Select matching declaration
@@ -961,20 +964,20 @@ class BilibiliPlatform(BasePlatform):
                 item_text = (await item.text_content() or "").strip()
                 if target_text in item_text:
                     await item.click()
-                    print(
+                    logger.info(
                         f"[bilibili] selected declaration: {item_text}"
                     )
                     clicked = True
                     break
 
             if not clicked:
-                print(
+                logger.info(
                     f"[bilibili] matching declaration not found: "
                     f"{target_text}"
                 )
             await asyncio.sleep(1)
         except Exception as exc:
-            print(
+            logger.info(
                 f"[bilibili] declaration setting failed (non-fatal): {exc}"
             )
 
@@ -987,7 +990,7 @@ class BilibiliPlatform(BasePlatform):
         if not creation_declaration:
             return
 
-        print(
+        logger.info(
             f"[bilibili] setting creation declaration: "
             f"{creation_declaration}"
         )
@@ -1000,7 +1003,7 @@ class BilibiliPlatform(BasePlatform):
                 'input.bcc-select-input-inner[placeholder*="创作声明"]'
             )
             if await select_input.count() == 0:
-                print(
+                logger.info(
                     "[bilibili] creation declaration dropdown not "
                     "present, skipping"
                 )
@@ -1025,7 +1028,7 @@ class BilibiliPlatform(BasePlatform):
                 opt_text = (await span.text_content() or "").strip()
                 if opt_text == target_text:
                     await opt.click()
-                    print(
+                    logger.info(
                         f"[bilibili] selected creation declaration: "
                         f"{opt_text}"
                     )
@@ -1033,14 +1036,14 @@ class BilibiliPlatform(BasePlatform):
                     break
 
             if not clicked:
-                print(
+                logger.info(
                     f"[bilibili] creation declaration option not found: "
                     f"{target_text}"
                 )
 
             await asyncio.sleep(1)
         except Exception as exc:
-            print(
+            logger.info(
                 f"[bilibili] creation declaration failed (non-fatal): "
                 f"{exc}"
             )
@@ -1054,7 +1057,7 @@ class BilibiliPlatform(BasePlatform):
             return
 
         dt = publish_date
-        print(
+        logger.info(
             f"[bilibili] setting schedule: "
             f"{dt.strftime('%Y-%m-%d %H:%M')}"
         )
@@ -1090,7 +1093,7 @@ class BilibiliPlatform(BasePlatform):
                     date_set = True
                     break
             if not date_set:
-                print(
+                logger.info(
                     f"[bilibili] could not find clickable date: "
                     f"{target_day}"
                 )
@@ -1127,6 +1130,6 @@ class BilibiliPlatform(BasePlatform):
             await page.keyboard.press("Escape")
             await asyncio.sleep(0.5)
 
-            print("[bilibili] schedule time set")
+            logger.info("[bilibili] schedule time set")
         except Exception as exc:
-            print(f"[bilibili] schedule time setting failed: {exc}")
+            logger.info(f"[bilibili] schedule time setting failed: {exc}")

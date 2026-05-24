@@ -7,6 +7,7 @@ login, cookie-check, profile-sync and publish action.
 """
 
 import asyncio
+import logging
 import os
 import threading
 from pathlib import Path
@@ -18,6 +19,8 @@ from .._browser import create_browser as _create_browser_async
 from .._browser import create_browser_sync
 from .._browser import create_context as _create_context_async
 from .._utils import scrape_user_profile, save_login_result, parse_schedule_time
+
+logger = logging.getLogger(__name__)
 from ..base_platform import BasePlatform
 
 # ---------------------------------------------------------------------------
@@ -75,7 +78,7 @@ class XiaohongshuPlatform(BasePlatform):
             img_locator = page.get_by_role("img").nth(2)
             src = await img_locator.get_attribute("src")
             original_url = page.url
-            print(f"[xhs] QR code src: {src}")
+            logger.info(f"[xhs] QR code src: {src}")
             status_queue.put(src)
 
             page.on(
@@ -89,9 +92,9 @@ class XiaohongshuPlatform(BasePlatform):
 
             try:
                 await asyncio.wait_for(url_changed_event.wait(), timeout=200)
-                print("[xhs] login page navigation detected")
+                logger.info("[xhs] login page navigation detected")
             except asyncio.TimeoutError:
-                print("[xhs] login timeout")
+                logger.info("[xhs] login timeout")
                 status_queue.put("500")
                 return
 
@@ -130,7 +133,7 @@ class XiaohongshuPlatform(BasePlatform):
 
                 # Redirected to login page means cookie expired
                 if page.url.startswith(_XHS_LOGIN_URL):
-                    print("[xhs] cookie expired (redirected to login)")
+                    logger.info("[xhs] cookie expired (redirected to login)")
                     return False
 
                 # Login box still visible means cookie expired
@@ -138,15 +141,15 @@ class XiaohongshuPlatform(BasePlatform):
                 if await login_box.count():
                     try:
                         if await login_box.is_visible():
-                            print("[xhs] cookie expired (login box visible)")
+                            logger.info("[xhs] cookie expired (login box visible)")
                             return False
                     except Exception:
                         return False
 
-                print("[xhs] cookie valid")
+                logger.info("[xhs] cookie valid")
                 return True
             except Exception as exc:
-                print(f"[xhs] cookie check error: {exc}")
+                logger.info(f"[xhs] cookie check error: {exc}")
                 return False
             finally:
                 await context.close()
@@ -171,7 +174,7 @@ class XiaohongshuPlatform(BasePlatform):
                 name, avatar = await scrape_user_profile(page)
                 return name, avatar
             except Exception as e:
-                print(f"[xhs] sync profile failed: {e}")
+                logger.info(f"[xhs] sync profile failed: {e}")
                 return "", ""
             finally:
                 await context.close()
@@ -264,10 +267,10 @@ class XiaohongshuPlatform(BasePlatform):
 
         for index, file_path in enumerate(file_paths):
             for cookie_path in account_paths:
-                print(f"[xhs] video file: {file_path}")
-                print(f"[xhs] title: {title}")
-                print(f"[xhs] desc: {desc}")
-                print(f"[xhs] tags: {tags}")
+                logger.info(f"[xhs] video file: {file_path}")
+                logger.info(f"[xhs] title: {title}")
+                logger.info(f"[xhs] desc: {desc}")
+                logger.info(f"[xhs] tags: {tags}")
 
                 pub_date = (
                     publish_datetimes
@@ -326,7 +329,7 @@ async def _publish_single_video(
                 publish_strategy=publish_strategy,
             )
             await context.storage_state(path=account_file)
-            print("[xhs] cookie updated")
+            logger.info("[xhs] cookie updated")
         finally:
             await context.close()
     finally:
@@ -350,7 +353,7 @@ async def _upload_video_content(
 ):
     """All browser interaction for a single XHS video upload."""
 
-    print(f"[xhs] starting upload: {title}")
+    logger.info(f"[xhs] starting upload: {title}")
     await page.goto(_XHS_PUBLISH_VIDEO_URL)
     await page.wait_for_url(_XHS_PUBLISH_VIDEO_URL)
 
@@ -388,22 +391,22 @@ async def _upload_video_content(
                             break
 
                 if upload_success:
-                    print("[xhs] video uploaded successfully")
+                    logger.info("[xhs] video uploaded successfully")
                     break
 
-                print("[xhs] still uploading, waiting...")
+                logger.info("[xhs] still uploading, waiting...")
             else:
                 title_input = page.locator('input[placeholder*="填写标题"]')
                 if await title_input.count() > 0 and await title_input.is_visible():
-                    print("[xhs] title input appeared, continuing")
+                    logger.info("[xhs] title input appeared, continuing")
                     break
-                print("[xhs] waiting for preview area...")
+                logger.info("[xhs] waiting for preview area...")
         except Exception as e:
-            print(f"[xhs] upload status check: {e}")
+            logger.info(f"[xhs] upload status check: {e}")
         await asyncio.sleep(2)
 
     # --- Fill title (20 char limit) ---
-    print("[xhs] filling title, desc and tags")
+    logger.info("[xhs] filling title, desc and tags")
     await _fill_title(page, title)
     await _fill_desc(page, desc)
     await _fill_tags(page, tags)
@@ -429,10 +432,10 @@ async def _upload_video_content(
                 "https://creator.xiaohongshu.com/publish/success?**",
                 timeout=3000,
             )
-            print("[xhs] video published successfully")
+            logger.info("[xhs] video published successfully")
             break
         except Exception:
-            print("[xhs] publish button click, retrying...")
+            logger.info("[xhs] publish button click, retrying...")
             await asyncio.sleep(0.5)
 
 
@@ -484,10 +487,10 @@ async def _set_thumbnail(page, thumbnail_path: str) -> None:
     if not thumbnail_path:
         return
     if not os.path.exists(thumbnail_path):
-        print(f"[xhs] thumbnail not found: {thumbnail_path}, skipping")
+        logger.info(f"[xhs] thumbnail not found: {thumbnail_path}, skipping")
         return
 
-    print("[xhs] setting cover image")
+    logger.info("[xhs] setting cover image")
 
     try:
         # Click the cover upload area
@@ -516,7 +519,7 @@ async def _set_thumbnail(page, thumbnail_path: str) -> None:
                 break
 
         if not modal:
-            print("[xhs] cover modal not found, skipping")
+            logger.info("[xhs] cover modal not found, skipping")
             return
 
         # Switch to upload cover tab
@@ -539,7 +542,7 @@ async def _set_thumbnail(page, thumbnail_path: str) -> None:
         # Upload file
         file_input = modal.locator('input[type="file"][accept*="image"]').first
         await file_input.wait_for(state="attached", timeout=10000)
-        print(f"[xhs] uploading cover: {os.path.basename(thumbnail_path)}")
+        logger.info(f"[xhs] uploading cover: {os.path.basename(thumbnail_path)}")
         await file_input.set_input_files(thumbnail_path)
         await page.wait_for_timeout(3000)
 
@@ -559,18 +562,18 @@ async def _set_thumbnail(page, thumbnail_path: str) -> None:
             await confirm_button.click()
             try:
                 await modal.wait_for(state="hidden", timeout=15000)
-                print("[xhs] cover set successfully")
+                logger.info("[xhs] cover set successfully")
             except Exception:
-                print("[xhs] cover modal did not close, continuing anyway")
+                logger.info("[xhs] cover modal did not close, continuing anyway")
         else:
-            print("[xhs] confirm button not found, skipping cover")
+            logger.info("[xhs] confirm button not found, skipping cover")
     except Exception as e:
-        print(f"[xhs] cover upload failed: {e}")
+        logger.info(f"[xhs] cover upload failed: {e}")
 
 
 async def _set_schedule_time(page, publish_date) -> None:
     """Enable timed publishing and set the target date/time."""
-    print(f"[xhs] setting schedule time: {publish_date}")
+    logger.info(f"[xhs] setting schedule time: {publish_date}")
     await (
         page.locator(".custom-switch-card")
         .filter(has_text="定时发布")
@@ -589,7 +592,7 @@ async def _set_content_declaration(page, ai_content: str) -> None:
     if not ai_content:
         return
 
-    print(f"[xhs] setting content declaration: {ai_content}")
+    logger.info(f"[xhs] setting content declaration: {ai_content}")
     try:
         # Click the declaration dropdown trigger
         select_wrapper = page.locator(
@@ -607,10 +610,10 @@ async def _set_content_declaration(page, ai_content: str) -> None:
         )
         if await target_option.count() > 0:
             await target_option.first.click()
-            print(f"[xhs] content declaration set: {ai_content}")
+            logger.info(f"[xhs] content declaration set: {ai_content}")
         else:
-            print(f"[xhs] declaration option not found: {ai_content}")
+            logger.info(f"[xhs] declaration option not found: {ai_content}")
 
         await asyncio.sleep(1)
     except Exception as exc:
-        print(f"[xhs] content declaration failed (non-fatal): {exc}")
+        logger.info(f"[xhs] content declaration failed (non-fatal): {exc}")

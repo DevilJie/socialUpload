@@ -21,6 +21,10 @@ from .._utils import (
 )
 from ..base_platform import BasePlatform
 
+import logging
+
+logger = logging.getLogger(__name__)
+
 # TikTok upload page uses an iframe; these locators select the correct DOM root.
 TK_IFRAME = '[data-tt="Upload_index_iframe"]'
 TK_DEFAULT = 'body'
@@ -152,7 +156,7 @@ class TiktokPlatform(BasePlatform):
             )
             return await scrape_user_profile(page)
         except Exception as e:
-            print(f"[tiktok] sync_profile error: {e}")
+            logger.info(f"[tiktok] sync_profile error: {e}")
             return ("", "")
         finally:
             await browser.close()
@@ -300,7 +304,7 @@ class TiktokPlatform(BasePlatform):
 
             # 2. Navigate to upload page
             await page.goto("https://www.tiktok.com/tiktokstudio/upload")
-            print(f"[tiktok] Uploading — {title}")
+            logger.info(f"[tiktok] Uploading — {title}")
 
             await page.wait_for_url(
                 "https://www.tiktok.com/tiktokstudio/upload", timeout=10_000
@@ -313,7 +317,7 @@ class TiktokPlatform(BasePlatform):
                     timeout=10_000,
                 )
             except Exception:
-                print("[tiktok] Neither iframe nor div appeared within timeout")
+                logger.info("[tiktok] Neither iframe nor div appeared within timeout")
 
             # 4. Choose base locator (iframe or body)
             if await page.locator(
@@ -341,7 +345,7 @@ class TiktokPlatform(BasePlatform):
 
             # 8. Upload thumbnail if provided
             if thumbnail_path:
-                print(f"[tiktok] Uploading thumbnail — {title}")
+                logger.info(f"[tiktok] Uploading thumbnail — {title}")
                 await self._upload_thumbnail(page, locator_base, thumbnail_path)
 
             # 9. Schedule if needed
@@ -353,11 +357,11 @@ class TiktokPlatform(BasePlatform):
 
             # 11. Log video ID
             video_id = await self._get_last_video_id(page, locator_base)
-            print(f"[tiktok] video_id: {video_id}")
+            logger.info(f"[tiktok] video_id: {video_id}")
 
             # 12. Update cookie
             await context.storage_state(path=account_file)
-            print("[tiktok] Cookie updated")
+            logger.info("[tiktok] Cookie updated")
 
             await asyncio.sleep(2)
 
@@ -403,7 +407,7 @@ class TiktokPlatform(BasePlatform):
 
         # Tags
         for index, tag in enumerate(tags, start=1):
-            print(f"[tiktok] Setting tag {index}: #{tag}")
+            logger.info(f"[tiktok] Setting tag {index}: #{tag}")
             await page.keyboard.press("End")
             await page.wait_for_timeout(1000)
             await page.keyboard.insert_text(f"#{tag} ")
@@ -422,15 +426,15 @@ class TiktokPlatform(BasePlatform):
                 )
                 disabled = await post_btn.get_attribute("disabled")
                 if disabled is None:
-                    print("[tiktok] Video uploaded")
+                    logger.info("[tiktok] Video uploaded")
                     break
-                print("[tiktok] Video uploading...")
+                logger.info("[tiktok] Video uploading...")
                 await asyncio.sleep(2)
                 # Check for upload error — retry if needed
                 if await locator_base.locator(
                     'button[aria-label="Select file"]'
                 ).count():
-                    print("[tiktok] Upload error detected, retrying...")
+                    logger.info("[tiktok] Upload error detected, retrying...")
                     select_file_btn = locator_base.locator(
                         'button[aria-label="Select file"]'
                     )
@@ -439,7 +443,7 @@ class TiktokPlatform(BasePlatform):
                     file_chooser = await fc_info.value
                     await file_chooser.set_files(file_path)
             except Exception:
-                print("[tiktok] Video uploading...")
+                logger.info("[tiktok] Video uploading...")
                 await asyncio.sleep(2)
 
     @staticmethod
@@ -536,10 +540,10 @@ class TiktokPlatform(BasePlatform):
                     "https://www.tiktok.com/tiktokstudio/content",
                     timeout=3000,
                 )
-                print("[tiktok] Video published successfully")
+                logger.info("[tiktok] Video published successfully")
                 break
             except Exception:
-                print("[tiktok] Video publishing...")
+                logger.info("[tiktok] Video publishing...")
                 await asyncio.sleep(0.5)
 
     @staticmethod

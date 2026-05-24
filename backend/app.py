@@ -1,5 +1,6 @@
 import asyncio
 import json
+import logging
 import os
 import sqlite3
 import sys
@@ -13,14 +14,16 @@ from queue import Queue
 from flask import Flask, Response, g, jsonify, request, send_from_directory
 from flask_cors import CORS
 
-print(f"[Startup] Python {sys.version} starting...")
-print(f"[Startup] Script: {__file__}")
-print(f"[Startup] SAU_PORT={os.environ.get('SAU_PORT')}, SAU_DATA_DIR={os.environ.get('SAU_DATA_DIR')}")
+logger = logging.getLogger(__name__)
+
+logger.info(f"[Startup] Python {sys.version} starting...")
+logger.info(f"[Startup] Script: {__file__}")
+logger.info(f"[Startup] SAU_PORT={os.environ.get('SAU_PORT')}, SAU_DATA_DIR={os.environ.get('SAU_DATA_DIR')}")
 
 BACKEND_DIR = Path(__file__).parent.resolve()
 if str(BACKEND_DIR) not in sys.path:
     sys.path.insert(0, str(BACKEND_DIR))
-    print(f"[Startup] Added backend dir to sys.path: {BACKEND_DIR}")
+    logger.info(f"[Startup] Added backend dir to sys.path: {BACKEND_DIR}")
 
 from conf import BASE_DIR
 from impl.registry import get_platform
@@ -43,13 +46,13 @@ def sse_stream(status_queue):
 
 
 # 注册阶段二扩展 API Blueprint
-print("[Startup] Importing ext_api...")
+logger.info("[Startup] Importing ext_api...")
 from ext_api import ext_api  # noqa: E402
 app.register_blueprint(ext_api)
-print("[Startup] ext_api registered OK")
+logger.info("[Startup] ext_api registered OK")
 
 FRONTEND_DIR = Path(__file__).parent.parent / "frontend"
-print(f"[Startup] Frontend dir: {FRONTEND_DIR} (exists={FRONTEND_DIR.exists()})")
+logger.info(f"[Startup] Frontend dir: {FRONTEND_DIR} (exists={FRONTEND_DIR.exists()})")
 
 
 @app.route('/')
@@ -214,7 +217,7 @@ def delete_file():
                 try:
                     file_path.unlink()
                 except Exception as e:
-                    print(f"[WARN] 删除实际文件失败: {e}")
+                    logger.info(f"[WARN] 删除实际文件失败: {e}")
 
             cursor.execute("DELETE FROM file_records WHERE id = ?", (file_id,))
             conn.commit()
@@ -295,7 +298,7 @@ def delete_account():
                     try:
                         cookie_file_path.unlink()
                     except Exception as e:
-                        print(f"[WARN] 删除Cookie文件失败: {e}")
+                        logger.info(f"[WARN] 删除Cookie文件失败: {e}")
 
             cursor.execute("DELETE FROM user_info WHERE id = ?", (account_id,))
             conn.commit()
@@ -529,7 +532,7 @@ def postVideo():
         else:
             return jsonify({"code": 500, "msg": "发布失败：页面未跳转，表单校验未通过", "data": None}), 500
     except Exception as e:
-        print(f"发布视频时出错: {str(e)}")
+        logger.info(f"发布视频时出错: {str(e)}")
         return jsonify({"code": 500, "msg": f"发布失败: {str(e)}", "data": None}), 500
 
 
@@ -631,7 +634,7 @@ def _record_publish(task_id, platform, account_name, video_path, title, descript
                  started_at, started_at, finished_at)
             )
     except Exception as e:
-        print(f"[History] 记录发布失败: {e}")
+        logger.info(f"[History] 记录发布失败: {e}")
 
 
 def _update_publish_result(task_id, status, finished_at, error_message=""):
@@ -642,7 +645,7 @@ def _update_publish_result(task_id, status, finished_at, error_message=""):
                 (status, finished_at, error_message, task_id)
             )
     except Exception as e:
-        print(f"[History] 更新发布结果失败: {e}")
+        logger.info(f"[History] 更新发布结果失败: {e}")
 
 
 @app.before_request
@@ -663,9 +666,9 @@ def _ensure_db():
             from init_db import init_database, migrate_database
             init_database()
             migrate_database()
-            print(f"[DB] Initialized database at {db_path}")
+            logger.info(f"[DB] Initialized database at {db_path}")
         except Exception as e:
-            print(f"[DB] Failed to initialize database: {e}")
+            logger.info(f"[DB] Failed to initialize database: {e}")
 
 
 @app.before_request
@@ -766,22 +769,22 @@ def find_available_port(start_port=5409, max_attempts=10):
 if __name__ == "__main__":
     import socket
 
-    print("[Startup] Initializing database...")
+    logger.info("[Startup] Initializing database...")
     from init_db import init_database, migrate_database
     init_database()
     migrate_database()
-    print("[Startup] Database initialized OK")
+    logger.info("[Startup] Database initialized OK")
 
     try:
         import sqlite3 as _sqlite
         _test_path = _get_db_path()
-        print(f"[Startup] DB path: {_test_path} (exists={_test_path.exists()})")
+        logger.info(f"[Startup] DB path: {_test_path} (exists={_test_path.exists()})")
         with _sqlite.connect(str(_test_path)) as _conn:
             _conn.execute("SELECT 1 FROM user_info LIMIT 1")
-        print("[Startup] DB verification OK")
+        logger.info("[Startup] DB verification OK")
     except Exception as _e:
-        print(f"[Startup] DB verification FAILED: {_e}")
-        print(f"[Startup] SAU_DATA_DIR={os.environ.get('SAU_DATA_DIR')}")
+        logger.info(f"[Startup] DB verification FAILED: {_e}")
+        logger.info(f"[Startup] SAU_DATA_DIR={os.environ.get('SAU_DATA_DIR')}")
 
     port = int(os.environ.get("SAU_PORT", "5409"))
     if port == 5409:
@@ -790,8 +793,8 @@ if __name__ == "__main__":
                 s.bind(("127.0.0.1", port))
         except OSError:
             port = find_available_port(5409 + 1)
-            print(f"[Startup] Port 5409 in use, using port {port}")
-    print(f"[Startup] Starting Waitress server on port {port}")
+            logger.info(f"[Startup] Port 5409 in use, using port {port}")
+    logger.info(f"[Startup] Starting Waitress server on port {port}")
     from waitress import serve
     os.environ["SAU_PORT"] = str(port)
     serve(app, host="0.0.0.0", port=port)

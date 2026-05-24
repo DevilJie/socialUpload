@@ -9,8 +9,11 @@ and shared utilities from ``backend/impl/_utils.py``.
 import asyncio
 import json
 import threading
+import logging
 from pathlib import Path
 from queue import Queue
+
+logger = logging.getLogger(__name__)
 
 from conf import BASE_DIR
 
@@ -221,7 +224,7 @@ async def _fill_title_and_tags(page, title: str, tags: list[str]) -> None:
     for tag in tags:
         await page.keyboard.type("#" + tag)
         await page.keyboard.press("Space")
-    print(f"[channels] added title + {len(tags)} hashtags")
+    logger.info(f"[channels] added title + {len(tags)} hashtags")
 
 
 async def _fill_description(page, desc: str) -> None:
@@ -230,7 +233,7 @@ async def _fill_description(page, desc: str) -> None:
         return
     await page.keyboard.press("Enter")
     await page.keyboard.type(desc)
-    print(f"[channels] added description ({len(desc)} chars)")
+    logger.info(f"[channels] added description ({len(desc)} chars)")
 
 
 async def _set_short_title(page, title: str, short_title: str | None = None) -> None:
@@ -323,10 +326,10 @@ async def _wait_for_upload_complete(page, file_path: str) -> None:
             publish_button = page.get_by_role("button", name="发表")
             button_class = await publish_button.get_attribute("class")
             if button_class and "weui-desktop-btn_disabled" not in button_class:
-                print("[channels] video upload complete")
+                logger.info("[channels] video upload complete")
                 break
 
-            print("[channels] uploading video...")
+            logger.info("[channels] uploading video...")
             await asyncio.sleep(2)
 
             # Check for upload errors
@@ -335,14 +338,14 @@ async def _wait_for_upload_complete(page, file_path: str) -> None:
                 'div.media-status-content div.tag-inner:has-text("删除")'
             ).count()
             if upload_failed and delete_button:
-                print("[channels] upload error detected, retrying")
+                logger.info("[channels] upload error detected, retrying")
                 await page.locator(
                     'div.media-status-content div.tag-inner:has-text("删除")'
                 ).click()
                 await page.get_by_role("button", name="删除", exact=True).click()
                 await _upload_video_file(page, file_path)
         except Exception:
-            print("[channels] uploading video...")
+            logger.info("[channels] uploading video...")
             await asyncio.sleep(2)
 
 
@@ -359,7 +362,7 @@ async def _set_thumbnail(page, thumbnail_path: str | None) -> None:
     if not thumbnail_path:
         return
 
-    print("[channels] setting cover image")
+    logger.info("[channels] setting cover image")
 
     # Step 1: click cover entry
     cover_entry_selectors = [
@@ -377,14 +380,14 @@ async def _set_thumbnail(page, thumbnail_path: str | None) -> None:
             await cover_entry.wait_for(state="visible", timeout=3000)
             await cover_entry.click()
             await page.wait_for_timeout(500)
-            print(f"[channels] cover entry clicked: {selector}")
+            logger.info(f"[channels] cover entry clicked: {selector}")
             entry_clicked = True
             break
         except Exception:
             continue
 
     if not entry_clicked:
-        print("[channels] WARNING: no cover entry found, skipping cover")
+        logger.info("[channels] WARNING: no cover entry found, skipping cover")
         return
 
     # Step 2: wait for cover dialog
@@ -401,7 +404,7 @@ async def _set_thumbnail(page, thumbnail_path: str | None) -> None:
             dialog = page.locator(selector).filter(has_text=text_hint).first
             if await dialog.count() and await dialog.is_visible():
                 cover_dialog = dialog
-                print(f"[channels] found cover dialog (text: {text_hint})")
+                logger.info(f"[channels] found cover dialog (text: {text_hint})")
                 break
         except Exception:
             continue
@@ -411,12 +414,12 @@ async def _set_thumbnail(page, thumbnail_path: str | None) -> None:
             fallback = page.locator("div.weui-desktop-dialog").first
             if await fallback.count() and await fallback.is_visible():
                 cover_dialog = fallback
-                print("[channels] using fallback dialog match")
+                logger.info("[channels] using fallback dialog match")
         except Exception:
             pass
 
     if not cover_dialog:
-        print("[channels] WARNING: cover dialog not found, skipping cover")
+        logger.info("[channels] WARNING: cover dialog not found, skipping cover")
         return
 
     # Step 3: upload cover file
@@ -432,7 +435,7 @@ async def _set_thumbnail(page, thumbnail_path: str | None) -> None:
             locator = cover_dialog.locator(selector).first
             if await locator.count():
                 file_input = locator
-                print(f"[channels] found file input: {selector}")
+                logger.info(f"[channels] found file input: {selector}")
                 break
         except Exception:
             continue
@@ -443,13 +446,13 @@ async def _set_thumbnail(page, thumbnail_path: str | None) -> None:
                 "div.weui-desktop-dialog input[type='file']"
             ).first
             if not await file_input.count():
-                print("[channels] WARNING: no file input for cover, skipping")
+                logger.info("[channels] WARNING: no file input for cover, skipping")
                 return
         except Exception:
             return
 
     await file_input.wait_for(state="attached", timeout=10000)
-    print(f"[channels] uploading cover: {thumbnail_path}")
+    logger.info(f"[channels] uploading cover: {thumbnail_path}")
     await file_input.set_input_files(thumbnail_path)
     await page.wait_for_timeout(2000)
 
@@ -460,7 +463,7 @@ async def _set_thumbnail(page, thumbnail_path: str | None) -> None:
     if await crop_dialog.count():
         try:
             await crop_dialog.wait_for(state="visible", timeout=10000)
-            print("[channels] crop dialog appeared")
+            logger.info("[channels] crop dialog appeared")
             for selector in (
                 'div.weui-desktop-dialog__ft button.weui-desktop-btn_primary:has-text("确定")',
                 'button:has-text("确定")',
@@ -470,13 +473,13 @@ async def _set_thumbnail(page, thumbnail_path: str | None) -> None:
                     btn = crop_dialog.locator(selector).first
                     if await btn.count() and await btn.is_visible():
                         await btn.click()
-                        print(f"[channels] crop confirmed: {selector}")
+                        logger.info(f"[channels] crop confirmed: {selector}")
                         await page.wait_for_timeout(1000)
                         break
                 except Exception:
                     continue
         except Exception as exc:
-            print(f"[channels] WARNING: crop confirm error: {exc}")
+            logger.info(f"[channels] WARNING: crop confirm error: {exc}")
 
     # Step 5: confirm cover dialog
     confirmed = False
@@ -491,7 +494,7 @@ async def _set_thumbnail(page, thumbnail_path: str | None) -> None:
             btn = cover_dialog.locator(selector).first
             if await btn.count() and await btn.is_visible():
                 await btn.click()
-                print(f"[channels] cover confirmed: {selector}")
+                logger.info(f"[channels] cover confirmed: {selector}")
                 confirmed = True
                 await page.wait_for_timeout(1000)
                 break
@@ -499,9 +502,9 @@ async def _set_thumbnail(page, thumbnail_path: str | None) -> None:
             continue
 
     if not confirmed:
-        print("[channels] WARNING: cover confirm button not found")
+        logger.info("[channels] WARNING: cover confirm button not found")
 
-    print("[channels] cover image set complete")
+    logger.info("[channels] cover image set complete")
 
 
 async def _set_schedule_time(page, publish_date) -> None:
@@ -545,7 +548,7 @@ async def _submit_publish(page, is_draft: bool = False) -> None:
                 if await draft_button.count():
                     await draft_button.click()
                 await page.wait_for_url("**/post/list**", timeout=30000)
-                print("[channels] draft saved successfully")
+                logger.info("[channels] draft saved successfully")
             else:
                 publish_button = page.locator(
                     'div.form-btns button:has-text("发表")'
@@ -553,19 +556,19 @@ async def _submit_publish(page, is_draft: bool = False) -> None:
                 if await publish_button.count():
                     await publish_button.click()
                 await page.wait_for_url(TENCENT_MANAGE_URL, timeout=30000)
-                print("[channels] video published successfully")
+                logger.info("[channels] video published successfully")
             break
         except Exception as exc:
             current_url = page.url
             if is_draft:
                 if "post/list" in current_url or "draft" in current_url:
-                    print("[channels] draft saved successfully")
+                    logger.info("[channels] draft saved successfully")
                     break
             else:
                 if TENCENT_MANAGE_URL in current_url:
-                    print("[channels] video published successfully")
+                    logger.info("[channels] video published successfully")
                     break
-            print(f"[channels] publish in progress... ({exc})")
+            logger.info(f"[channels] publish in progress... ({exc})")
             await asyncio.sleep(0.5)
 
 
@@ -602,7 +605,7 @@ class ChannelsPlatform(BasePlatform):
                 "status": "qrcode",
                 "qrcode": qrcode_src,
             }))
-            print("[channels] QR code ready, waiting for scan")
+            logger.info("[channels] QR code ready, waiting for scan")
 
             # Poll for login completion
             poll_interval = 3
@@ -610,7 +613,7 @@ class ChannelsPlatform(BasePlatform):
             scanned_logged = False
             for _ in range(max_checks):
                 if await _is_login_completed(page):
-                    print(f"[channels] login successful, redirected to: {page.url}")
+                    logger.info(f"[channels] login successful, redirected to: {page.url}")
                     await asyncio.sleep(2)
                     await save_login_result(
                         context,
@@ -623,11 +626,11 @@ class ChannelsPlatform(BasePlatform):
                     return
 
                 if not scanned_logged and await _is_qrcode_scanned(page):
-                    print("[channels] QR code scanned, awaiting confirmation")
+                    logger.info("[channels] QR code scanned, awaiting confirmation")
                     scanned_logged = True
 
                 if await _is_qrcode_expired(page):
-                    print("[channels] QR code expired, refreshing")
+                    logger.info("[channels] QR code expired, refreshing")
                     await _refresh_qrcode(page)
                     await asyncio.sleep(1)
                     try:
@@ -647,7 +650,7 @@ class ChannelsPlatform(BasePlatform):
                 "message": "视频号扫码登录超时",
             }))
         except Exception as exc:
-            print(f"[channels] login error: {exc}")
+            logger.info(f"[channels] login error: {exc}")
             status_queue.put(json.dumps({
                 "status": "failed",
                 "message": str(exc),
@@ -686,13 +689,13 @@ class ChannelsPlatform(BasePlatform):
 
             login_button = page.get_by_text("扫码登录", exact=True).first
             if await login_button.count():
-                print("[channels] cookie invalid — login form visible")
+                logger.info("[channels] cookie invalid — login form visible")
                 return False
 
-            print("[channels] cookie valid")
+            logger.info("[channels] cookie valid")
             return True
         except Exception as exc:
-            print(f"[channels] cookie check error (treating as invalid): {exc}")
+            logger.info(f"[channels] cookie check error (treating as invalid): {exc}")
             return False
         finally:
             try:
@@ -721,7 +724,7 @@ class ChannelsPlatform(BasePlatform):
             await context.close()
             return name, avatar
         except Exception as exc:
-            print(f"[channels] sync_profile error: {exc}")
+            logger.info(f"[channels] sync_profile error: {exc}")
             return "", ""
         finally:
             try:
@@ -816,10 +819,10 @@ class ChannelsPlatform(BasePlatform):
             for index, file_path in enumerate(resolved_files):
                 publish_date = publish_datetimes[index]
                 for cookie_path in resolved_accounts:
-                    print(f"[channels] uploading: {file_path}")
-                    print(f"[channels] title: {title}")
-                    print(f"[channels] desc: {desc}")
-                    print(f"[channels] tags: {tags}")
+                    logger.info(f"[channels] uploading: {file_path}")
+                    logger.info(f"[channels] title: {title}")
+                    logger.info(f"[channels] desc: {desc}")
+                    logger.info(f"[channels] tags: {tags}")
 
                     browser = await self.create_browser(headless=False)
                     try:
@@ -864,7 +867,7 @@ class ChannelsPlatform(BasePlatform):
 
                         # Update stored cookies
                         await context.storage_state(path=cookie_path)
-                        print("[channels] cookies updated")
+                        logger.info("[channels] cookies updated")
                     finally:
                         try:
                             await context.close()
