@@ -18,7 +18,6 @@ Thumbs.db
 *.env.local
 .superpowers/
 data/logs/*
-vendor/data/logs/*
 
 # Tauri
 src-tauri/target/

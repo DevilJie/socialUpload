@@ -269,7 +269,7 @@ social-auto-upload-web-ui/
 │   └── package.json
 ├── backend/               # Python Flask 后端
 │   ├── app.py            # 主应用入口
-│   ├── playwright/       # 浏览器自动化（登录抓取）
+│   ├── impl/             # 浏览器自动化（CloakBrowser）
 │   ├── ext_api/          # 平台 API 集成
 │   └── requirements.txt
 ├── src-tauri/            # Tauri 桌面应用
