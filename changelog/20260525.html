@@ -615,6 +615,20 @@
             <p>渠道和账号使用实际 logo 图片、配置信息不再丢失、发布成功判定基于页面跳转而非点击事件</p>
           </div>
         </li>
+        <li class="highlight-item">
+          <div class="highlight-num">6</div>
+          <div class="highlight-text">
+            <h3>视频抽帧 & 封面编辑器</h3>
+            <p>FFmpeg 后端抽帧 + 封面编辑弹窗（时间轴拖拽、高清截帧、裁剪）+ 推荐帧快速选择</p>
+          </div>
+        </li>
+        <li class="highlight-item">
+          <div class="highlight-num">7</div>
+          <div class="highlight-text">
+            <h3>草稿箱功能</h3>
+            <p>发布页草稿服务端持久化，草稿箱卡片管理，编辑时 1:1 完整恢复所有状态（含抽帧选中）</p>
+          </div>
+        </li>
       </ul>
     </div>
   </section>
@@ -879,46 +893,63 @@
     </div>
   </section>
 
-  <!-- Section 7: 自动填充标题 -->
-  <section class="section" data-section="6" style="background:linear-gradient(180deg,#1a2332,#0F172A);justify-content:flex-start;padding-top:6rem;">
+  <!-- Section 7: 视频抽帧 & 封面编辑 -->
+  <section class="section" data-section="6" style="background:linear-gradient(180deg,#0F172A,#1a2332);justify-content:flex-start;padding-top:6rem;">
     <div class="section-content">
       <div class="section-header">
-        <div class="section-icon settings">
-          <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.066 2.573c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.573 1.066c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.066-2.573c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
-            <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+        <div class="section-icon ui">
+          <svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
           </svg>
         </div>
-        <h2 class="section-title">自动填充标题</h2>
-        <span class="section-meta">2 次提交</span>
+        <h2 class="section-title">视频抽帧 & 封面编辑</h2>
+        <span class="section-meta">12 次提交</span>
       </div>
 
       <div class="card-grid">
         <div class="card">
           <div class="card-title">
-            系统设置开关
+            FFmpeg 视频抽帧服务
             <span class="card-tag feat">新功能</span>
           </div>
           <div class="card-desc">
-            <p>设置页面新增「发布设置」卡片</p>
+            <p>后端新增 FFmpeg 视频抽帧能力</p>
             <ul>
-              <li>上传视频后自动填充标题 Toggle 开关</li>
-              <li>状态持久化到 localStorage</li>
-              <li>默认开启</li>
+              <li><code>services/ffmpeg_service.py</code> — FFmpeg 二进制自动发现 + 视频时长检测</li>
+              <li><code>routes/frames.py</code> — 抽帧 API + 缓存 + 系统信息</li>
+              <li>逐帧 <code>-ss</code> 精确定位，避免关键帧偏移</li>
+              <li>抽取结果缓存到 <code>data/frames/</code>，重复请求秒回</li>
             </ul>
           </div>
         </div>
         <div class="card">
           <div class="card-title">
-            发布中心联动
+            封面编辑器（CoverEditorDialog）
             <span class="card-tag feat">新功能</span>
           </div>
           <div class="card-desc">
-            <p>上传视频成功后自动执行</p>
+            <p>全新封面编辑弹窗组件</p>
             <ul>
-              <li>将视频文件名（去除扩展名）填入所有渠道标题</li>
-              <li>同步更新当前选中平台的 <code>form.title</code></li>
-              <li>同步更新批量标题 <code>batchTitle</code></li>
+              <li>视频时间轴拖拽缩略图预览（VideoTimeline）</li>
+              <li>点击时间轴截取高清帧</li>
+              <li>图片裁剪功能（横版 16:9 / 竖版 9:16）</li>
+              <li>素材库侧边栏，快速选择已有图片</li>
+              <li>深色主题适配</li>
+            </ul>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-title">
+            推荐帧快速选择（CoverCard）
+            <span class="card-tag feat">新功能</span>
+          </div>
+          <div class="card-desc">
+            <p>发布页面封面卡片底部展示推荐帧</p>
+            <ul>
+              <li>自动从视频中均匀提取 6 帧推荐</li>
+              <li>单横版视频时竖封面自动复用横版帧</li>
+              <li>点击推荐帧秒设封面，无需打开编辑器</li>
+              <li>已选帧高亮显示</li>
             </ul>
           </div>
         </div>
@@ -926,13 +957,159 @@
     </div>
   </section>
 
-  <!-- Section 8: Footer -->
-  <section class="section footer" data-section="7">
+  <!-- Section 8: 发布中心布局重构 -->
+  <section class="section" data-section="7" style="background:linear-gradient(180deg,#1a2332,#0F172A);justify-content:flex-start;padding-top:6rem;">
+    <div class="section-content">
+      <div class="section-header">
+        <div class="section-icon ui">
+          <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM4 13a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1v-6zM16 13a1 1 0 011-1h2a1 1 0 011 1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-6z"/>
+          </svg>
+        </div>
+        <h2 class="section-title">发布中心布局重构</h2>
+        <span class="section-meta">1 次提交</span>
+      </div>
+
+      <div class="card-grid">
+        <div class="card">
+          <div class="card-title">
+            手机预览面板
+            <span class="card-tag feat">新功能</span>
+            <span class="card-tag refactor">重构</span>
+          </div>
+          <div class="card-desc">
+            <p>发布页面新增右侧手机预览面板</p>
+            <ul>
+              <li>三栏布局：账号侧边栏 | 配置区 | 手机预览</li>
+              <li>实时预览封面图效果</li>
+              <li>横版/竖版视频 Tab 切换</li>
+              <li>视频上传 + 封面设置整合到预览面板</li>
+            </ul>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-title">
+            其他优化
+            <span class="card-tag style">样式</span>
+          </div>
+          <div class="card-desc">
+            <ul>
+              <li>TikTok 平台 logo 新增</li>
+              <li>版本号显示</li>
+              <li>抽帧缓存清理接口</li>
+              <li>抽帧缓存目录加入 gitignore</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Section 9: 草稿箱 -->
+  <section class="section" data-section="8" style="background:linear-gradient(180deg,#0F172A,#1a2332);justify-content:flex-start;padding-top:6rem;">
+    <div class="section-content">
+      <div class="section-header">
+        <div class="section-icon settings">
+          <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+          </svg>
+        </div>
+        <h2 class="section-title">草稿箱</h2>
+        <span class="section-meta">8 次提交</span>
+      </div>
+
+      <div class="card-grid">
+        <div class="card">
+          <div class="card-title">
+            草稿持久化存储
+            <span class="card-tag feat">新功能</span>
+          </div>
+          <div class="card-desc">
+            <p>发布页草稿从 localStorage 迁移到服务端数据库</p>
+            <ul>
+              <li>后端 <code>drafts</code> 表 + 5 个 CRUD API（<code>/api/v2/drafts</code>）</li>
+              <li>保存完整状态：视频、封面（含抽帧选择）、平台配置、账号覆盖、选中账号</li>
+              <li>保存 UX 状态：展开分组、选中平台、横竖屏 Tab</li>
+              <li>自动提取标题、封面、渠道摘要等元数据用于列表展示</li>
+            </ul>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-title">
+            草稿箱页面
+            <span class="card-tag feat">新功能</span>
+          </div>
+          <div class="card-desc">
+            <p>新增草稿箱页面，卡片布局管理所有草稿</p>
+            <ul>
+              <li>卡片展示：封面缩略图、标题、渠道+账号数、文件大小、保存时间</li>
+              <li>渠道标签单行展示，溢出跑马灯滚动</li>
+              <li>编辑/删除按钮铺满卡片底部</li>
+              <li>侧边栏新增草稿箱菜单入口</li>
+              <li>北京时间（UTC+8）时间显示</li>
+            </ul>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-title">
+            草稿 1:1 恢复
+            <span class="card-tag feat">新功能</span>
+          </div>
+          <div class="card-desc">
+            <p>编辑草稿时完整还原发布页面所有状态</p>
+            <ul>
+              <li>点击"编辑"跳转发布中心，URL 参数加载草稿</li>
+              <li>恢复视频/封面（含 <code>_fromFrame</code> 抽帧选中状态）</li>
+              <li>恢复各平台配置 + 账号级别覆盖</li>
+              <li>恢复选中账号、展开分组等 UX 状态</li>
+              <li>自动重新提取视频抽帧</li>
+              <li>保存按钮自动切换为"更新草稿"</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Section 10: 更新日志页面 -->
+  <section class="section" data-section="9" style="background:linear-gradient(180deg,#1a2332,#0F172A);justify-content:flex-start;padding-top:6rem;">
+    <div class="section-content">
+      <div class="section-header">
+        <div class="section-icon settings">
+          <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>
+          </svg>
+        </div>
+        <h2 class="section-title">更新日志页面</h2>
+        <span class="section-meta">1 次提交</span>
+      </div>
+
+      <div class="card-grid">
+        <div class="card">
+          <div class="card-title">
+            更新日志列表
+            <span class="card-tag feat">新功能</span>
+          </div>
+          <div class="card-desc">
+            <ul>
+              <li>侧边栏新增"更新日志"菜单入口</li>
+              <li>后端 API 自动扫描 <code>changelog/</code> 目录，按日期倒序排列</li>
+              <li>卡片展示日期（日 + 月份），点击弹窗查看详情</li>
+              <li>弹窗内 iframe 嵌入完整更新日志 HTML 页面</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Section 11: Footer -->
+  <section class="section footer" data-section="10">
     <div class="section-content">
       <div class="footer-logo">Social-Auto-Upload-Web-UI</div>
       <p>让社交媒体内容上传变得更简单</p>
       <div class="footer-meta">
-        最后更新于 2026年5月25日 · 共 27 次提交 · 10 个平台
+        最后更新于 2026年5月25日 · 共 49 次提交 · 10 个平台
       </div>
     </div>
   </section>
