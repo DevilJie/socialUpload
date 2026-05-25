@@ -1,0 +1,29 @@
+[build-system]
+requires = ["setuptools>=68.0"]
+build-backend = "setuptools.backends._legacy:_Backend"
+
+[project]
+name = "sau-cli"
+version = "0.1.0"
+description = "社交媒体自动上传 CLI 工具"
+requires-python = ">=3.10"
+dependencies = [
+    "typer>=0.12",
+    "rich>=13.0",
+    "cloakbrowser>=0.3",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0",
+]
+
+[project.scripts]
+sau = "cli.main:app"
+
+[tool.setuptools.packages.find]
+include = ["cli*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]
