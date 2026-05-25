@@ -81,6 +81,11 @@ def vite_svg():
     return send_from_directory(str(FRONTEND_DIR), 'vite.svg')
 
 
+@app.route('/changelog/<path:filename>')
+def serve_changelog(filename):
+    return send_from_directory(str(BASE_DIR / "changelog"), filename)
+
+
 # ── Helper ──────────────────────────────────────────────────
 
 def _get_db_path():

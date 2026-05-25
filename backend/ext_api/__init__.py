@@ -610,3 +610,32 @@ def _extract_video_file_size(draft_data):
         if video and video.get('size'):
             return video['size']
     return 0
+
+
+# ========== 更新日志 ==========
+
+@ext_api.route('/changelog', methods=['GET'])
+def get_changelog():
+    """获取更新日志列表（按文件名倒序）"""
+    import os
+    changelog_dir = BASE_DIR / "changelog"
+    if not changelog_dir.exists():
+        return jsonify({"code": 200, "data": []})
+
+    files = []
+    for f in sorted(changelog_dir.iterdir()):
+        if f.is_file() and f.suffix == '.html':
+            # 从文件名提取日期 (20260525.html -> 2026-05-25)
+            name = f.stem
+            if len(name) == 8 and name.isdigit():
+                date_str = f"{name[:4]}-{name[4:6]}-{name[6:8]}"
+            else:
+                date_str = name
+            files.append({
+                "filename": f.name,
+                "date": date_str,
+                "url": f"/changelog/{f.name}",
+            })
+
+    files.sort(key=lambda x: x['date'], reverse=True)
+    return jsonify({"code": 200, "data": files})
