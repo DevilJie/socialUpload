@@ -7,7 +7,6 @@ CloakBrowser via ``_browser.py``.
 """
 
 import asyncio
-import logging
 import os
 import re
 import threading
@@ -16,7 +15,9 @@ from queue import Queue
 
 from conf import BASE_DIR
 
-logger = logging.getLogger(__name__)
+from .._logger import get_channel_logger
+
+logger = get_channel_logger("bilibili")
 
 from .._browser import create_browser_sync
 from .._utils import parse_schedule_time, save_login_result, scrape_bilibili_profile
