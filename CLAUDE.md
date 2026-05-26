@@ -12,6 +12,26 @@
 - 后端使用 Python
 - 前端使用 React/Vite
 
+## 服务启动
+
+**启动前检查**：如果端口被占用，先 kill 再启动。
+
+### 后端启动
+
+```bash
+cd /home/czy/workspace/ai/social-auto-upload-web-ui/backend && python3 app.py
+```
+- 端口：5409
+- 如果端口被占用：`lsof -i :5409 | grep -v "^COMMAND" | awk '{print $2}' | xargs -r kill -9`
+
+### 前端启动
+
+```bash
+cd /home/czy/workspace/ai/social-auto-upload-web-ui/frontend && npm run dev
+```
+- 端口：5173
+- 如果端口被占用：`lsof -i :5173 | grep -v "^COMMAND" | awk '{print $2}' | xargs -r kill -9`
+
 ## Coding Tasks
 
 Use the `/browse` skill from gstack for all web browsing, never use `mcp__claude-in-chrome__*` tools.

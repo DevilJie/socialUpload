@@ -677,36 +677,73 @@ class ChannelsPlatform(BasePlatform):
         (``扫码登录``) or the authenticated UI (``发表视频`` / ``微信小店``)
         is visible.
         """
+        logger.info("=== check_cookie 开始 === cookie_file=%s", cookie_file)
         cookie_path = str(Path(BASE_DIR / "cookiesFile" / cookie_file))
+
+        cookie_file_path = Path(cookie_path)
+        if not cookie_file_path.exists():
+            logger.warning("check_cookie: cookie 文件不存在: %s", cookie_path)
+            return False
+
+        logger.info("check_cookie: cookie 文件存在，大小=%d", cookie_file_path.stat().st_size)
+
         browser = await self.create_browser(headless=True)
+        logger.info("check_cookie: browser created, headless=True")
+
         try:
             context = await self.create_context(browser, storage_state=cookie_path)
-            page = await context.new_page()
-            await page.goto(TENCENT_UPLOAD_URL)
+            logger.info("check_cookie: context created")
+
             try:
-                await page.wait_for_url(TENCENT_UPLOAD_URL, timeout=5000)
-            except Exception:
-                pass
+                page = await context.new_page()
+                logger.info("check_cookie: page created, 正在跳转到: %s", TENCENT_UPLOAD_URL)
 
-            login_button = page.get_by_text("扫码登录", exact=True).first
-            if await login_button.count():
-                logger.info("[channels] cookie invalid — login form visible")
+                await page.goto(TENCENT_UPLOAD_URL, wait_until="domcontentloaded")
+                logger.info("check_cookie: domcontentloaded 完成")
+
+                await asyncio.sleep(2)
+                await page.wait_for_load_state("networkidle")
+                logger.info("check_cookie: networkidle 完成")
+
+                final_url = page.url
+                logger.info("check_cookie: 最终 URL = %s", final_url)
+
+                try:
+                    title = await page.title()
+                    logger.info("check_cookie: 页面标题 = %s", title)
+                except Exception as e:
+                    logger.warning("check_cookie: 获取页面标题失败: %s", e)
+
+                # 关键检查：如果跳转到 login.html 说明 cookie 失效
+                if "login.html" in final_url:
+                    logger.info("check_cookie: [FAIL] 已跳转到登录页，Cookie 失效 | URL: %s", final_url)
+                    return False
+
+                # 如果停留在 channels.weixin.qq.com（没有跳转到 login.html）说明 cookie 有效
+                if "channels.weixin.qq.com" in final_url:
+                    logger.info("check_cookie: [SUCCESS] 停留在 channels.weixin.qq.com，Cookie 有效 | URL: %s", final_url)
+                    return True
+
+                # 其他情况（跳转到其他域名）说明 cookie 失效
+                logger.info("check_cookie: [FAIL] 已跳转到外部域名，Cookie 失效 | URL: %s", final_url)
                 return False
-
-            logger.info("[channels] cookie valid")
-            return True
-        except Exception as exc:
-            logger.info(f"[channels] cookie check error (treating as invalid): {exc}")
+            except Exception as exc:
+                logger.error("check_cookie: [EXCEPTION] 发生异常: %s", exc)
+                import traceback
+                logger.error("check_cookie: traceback: %s", traceback.format_exc())
+                return False
+            finally:
+                logger.info("check_cookie: 正在关闭 context")
+                await context.close()
+        except Exception as e:
+            logger.error("check_cookie: [EXCEPTION] browser/context 创建失败: %s", e)
+            import traceback
+            logger.error("check_cookie: traceback: %s", traceback.format_exc())
             return False
         finally:
-            try:
-                await context.close()
-            except Exception:
-                pass
-            try:
-                await browser.close()
-            except Exception:
-                pass
+            logger.info("check_cookie: 正在关闭 browser")
+            await browser.close()
+        logger.info("=== check_cookie 结束 ===")
 
     # ------------------------------------------------------------------
     # sync_profile — open platform URL with cookies, scrape profile
