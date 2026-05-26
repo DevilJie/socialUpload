@@ -7,10 +7,11 @@ Chromium) with automatic Playwright fallback.
 """
 
 import asyncio
-import logging
 import threading
 from pathlib import Path
 from queue import Queue
+
+from impl._logger import get_channel_logger
 
 from conf import BASE_DIR
 
@@ -18,7 +19,7 @@ from .._browser import create_browser_sync
 from .._utils import parse_schedule_time, save_login_result, scrape_user_profile
 from ..base_platform import BasePlatform
 
-logger = logging.getLogger(__name__)
+logger = get_channel_logger("douyin")
 
 DOUYIN_PUBLISH_STRATEGY_IMMEDIATE = "immediate"
 DOUYIN_PUBLISH_STRATEGY_SCHEDULED = "scheduled"
