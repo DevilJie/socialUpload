@@ -1,6 +1,5 @@
 import asyncio
 import json
-import logging
 import os
 import sqlite3
 import sys
@@ -13,8 +12,9 @@ from queue import Queue
 
 from flask import Flask, Response, g, jsonify, request, send_from_directory
 from flask_cors import CORS
+from util._logger import get_channel_logger
 
-logger = logging.getLogger(__name__)
+logger = get_channel_logger("backend")
 
 logger.info(f"[Startup] Python {sys.version} starting...")
 logger.info(f"[Startup] Script: {__file__}")
