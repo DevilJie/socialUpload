@@ -137,8 +137,10 @@ if "!VENV_OK!"=="0" (
         exit /b 1
     )
     echo     安装 Python 依赖，请稍候...
+    echo.
     "%VENV_PIP%" cache purge >nul 2>&1
-    "%VENV_PIP%" install -r "%BACKEND_DIR%\requirements.txt" --quiet --no-cache-dir
+    "%VENV_PIP%" install -r "%BACKEND_DIR%\requirements.txt" --no-cache-dir
+    echo.
     echo !CURRENT_HASH!> "%HASH_FILE%"
     echo   √ 后端环境就绪
 ) else (
@@ -233,8 +235,10 @@ if "!CURRENT_HASH!"=="" set "CURRENT_HASH=no-git"
 
 if not exist "%FRONTEND_DIR%\node_modules" (
     echo     安装前端依赖，请稍候...
+    echo.
     cd /d "%FRONTEND_DIR%"
-    call npm install --prefer-offline >nul 2>&1
+    call npm install --prefer-offline
+    echo.
     echo !CURRENT_HASH!> "%HASH_FILE%"
     echo   √ 前端依赖就绪
 ) else (
@@ -248,8 +252,10 @@ if not exist "%FRONTEND_DIR%\node_modules" (
         echo   √ 依赖无变更，跳过
     ) else (
         echo     检测到变更，更新前端依赖，请稍候...
+        echo.
         cd /d "%FRONTEND_DIR%"
-        call npm install --prefer-offline >nul 2>&1
+        call npm install --prefer-offline
+        echo.
         echo !CURRENT_HASH!> "%HASH_FILE%"
         echo   √ 依赖更新完成
     )
