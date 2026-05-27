@@ -288,21 +288,31 @@ cd /d "%PROJECT_ROOT%"
 echo.
 echo [6/6] 等待服务就绪...
 
-:: 等待后端
+:: 等待后端（自动检测端口）
+set "BACKEND_PORT=5409"
 set /a "COUNT=0"
 :wait_backend
 set /a "COUNT+=1"
-if !COUNT! GTR 30 (
+if !COUNT! GTR 60 (
     echo   X 后端启动超时，请查看日志: %BACKEND_LOG%
+    echo.
+    echo   最后 10 行日志:
+    powershell -Command "Get-Content '%BACKEND_LOG%' -Tail 10"
     pause
     exit /b 1
 )
-curl -s -o nul -w "%%{http_code}" http://127.0.0.1:5409/api/health 2>nul | findstr "200" >nul
+
+:: 从日志检测实际端口
+if exist "%BACKEND_LOG%" (
+    for /f "tokens=*" %%p in ('powershell -Command "Select-String -Path '%BACKEND_LOG%' -Pattern 'Serving on http://0\.0\.0\.0:(\d+)' | ForEach-Object { $_.Matches.Groups[1].Value } | Select-Object -Last 1" 2^>nul') do set "BACKEND_PORT=%%p"
+)
+
+curl -s -o nul -w "%%{http_code}" http://127.0.0.1:!BACKEND_PORT!/api/health 2>nul | findstr "200" >nul
 if !errorlevel! neq 0 (
     timeout /t 1 /nobreak >nul
     goto wait_backend
 )
-echo   √ 后端就绪
+echo   √ 后端就绪 (端口: !BACKEND_PORT!)
 
 :: 等待前端
 set /a "COUNT=0"
@@ -324,7 +334,7 @@ echo   √ 前端就绪
 echo.
 echo ============================================
 echo   前端界面: http://localhost:5173
-echo   后端 API: http://localhost:5409
+echo   后端 API: http://localhost:!BACKEND_PORT!
 echo ============================================
 echo.
 echo 按任意键停止所有服务...
