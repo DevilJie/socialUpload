@@ -220,6 +220,89 @@
             </div>
           </div>
 
+          <!-- ===== 抖音图文特有配置 ===== -->
+          <template v-if="selectedPlatform === 'douyin'">
+            <!-- 官方活动 -->
+            <div class="setting-card" :style="{ borderColor: currentPlatformConfig.color + '26', background: currentPlatformConfig.color + '0a' }">
+              <div class="setting-label" :style="{ color: currentPlatformConfig.color }">官方活动</div>
+              <DouyinActivitySelect
+                v-if="selectedAccountId"
+                :account-id="selectedAccountId"
+                v-model="form.activityId"
+                @change="handleActivityChange"
+              />
+              <div v-else class="setting-hint">请先选择一个抖音账号</div>
+            </div>
+
+            <!-- 添加合集 -->
+            <div class="setting-card" :style="{ borderColor: currentPlatformConfig.color + '26', background: currentPlatformConfig.color + '0a' }">
+              <div class="setting-label" :style="{ color: currentPlatformConfig.color }">添加合集</div>
+              <DouyinMixSelect
+                v-if="selectedAccountId"
+                :account-id="selectedAccountId"
+                v-model="form.mixId"
+                @change="handleMixChange"
+              />
+              <div v-else class="setting-hint">请先选择一个抖音账号</div>
+            </div>
+
+            <!-- 选择音乐 -->
+            <div class="setting-card" :style="{ borderColor: currentPlatformConfig.color + '26', background: currentPlatformConfig.color + '0a' }">
+              <div class="setting-label" :style="{ color: currentPlatformConfig.color }">选择音乐</div>
+              <div v-if="form.selectedMusic" class="selected-music">
+                <div class="music-info">
+                  <img
+                    :src="form.selectedMusic.cover_medium?.url_list?.[0]"
+                    class="music-cover"
+                    @error="onMusicCoverError"
+                  />
+                  <div>
+                    <div class="music-name">{{ form.selectedMusic.title }}</div>
+                    <div class="music-author">{{ form.selectedMusic.author }}</div>
+                  </div>
+                </div>
+                <el-button size="small" text @click="form.selectedMusic = null">移除</el-button>
+              </div>
+              <el-button
+                v-else
+                size="small"
+                @click="musicDrawerVisible = true"
+                :disabled="!selectedAccountId"
+              >
+                <el-icon><VideoPlay /></el-icon>
+                选择音乐
+              </el-button>
+              <div v-if="!selectedAccountId" class="setting-hint">请先选择一个抖音账号</div>
+            </div>
+
+            <!-- 关联热点 -->
+            <div class="setting-card" :style="{ borderColor: currentPlatformConfig.color + '26', background: currentPlatformConfig.color + '0a' }">
+              <div class="setting-label" :style="{ color: currentPlatformConfig.color }">关联热点</div>
+              <DouyinHotspotSelect
+                v-if="selectedAccountId"
+                :account-id="selectedAccountId"
+                v-model="form.hotspotId"
+                @change="handleHotspotChange"
+              />
+              <div v-else class="setting-hint">请先选择一个抖音账号</div>
+            </div>
+
+            <!-- 自主声明 -->
+            <div class="setting-card" :style="{ borderColor: currentPlatformConfig.color + '26', background: currentPlatformConfig.color + '0a' }">
+              <div class="setting-label" :style="{ color: currentPlatformConfig.color }">自主声明</div>
+              <el-select
+                v-model="form.declaration"
+                placeholder="请选择自主声明"
+                clearable
+                style="width: 100%"
+              >
+                <el-option label="内容由AI生成" value="ai_generated" />
+                <el-option label="内容包含广告" value="contains_ad" />
+                <el-option label="内容为虚构演绎" value="fictional" />
+              </el-select>
+            </div>
+          </template>
+
           <div class="settings-grid">
             <template v-for="field in imagePlatformSettingsFields" :key="field.key">
               <template v-if="field.key !== 'title' && field.key !== 'description'">
@@ -486,6 +569,14 @@
       @select="onMaterialSelected"
     />
 
+    <!-- 抖音音乐选择抽屉 -->
+    <DouyinMusicDrawer
+      v-if="selectedAccountId"
+      v-model="musicDrawerVisible"
+      :account-id="selectedAccountId"
+      @select="handleMusicSelect"
+    />
+
     <!-- Image Preview Dialog -->
     <ImagePreviewDialog
       ref="imagePreviewDialogRef"
@@ -557,6 +648,12 @@ import ImageCarousel from '@/components/ImageCarousel.vue'
 import ImagePreviewDialog from '@/components/ImagePreviewDialog.vue'
 import MaterialSelectDialog from '@/components/MaterialSelectDialog.vue'
 
+// 抖音图文发布组件
+import DouyinMixSelect from '@/components/douyin/MixSelect.vue'
+import DouyinActivitySelect from '@/components/douyin/ActivitySelect.vue'
+import DouyinHotspotSelect from '@/components/douyin/HotspotSelect.vue'
+import DouyinMusicDrawer from '@/components/douyin/MusicDrawer.vue'
+
 // ========== Stores & Config ==========
 const accountStore = useAccountStore()
 const appStore = useAppStore()
@@ -618,10 +715,22 @@ const currentPreviewIndex = ref(0)
 
 // ========== Per-platform Config ==========
 const platformConfigs = reactive({
-  douyin: { title: '', description: '', productTitle: '', productLink: '', aiContent: '', isOriginal: false, scheduleTime: '', visibility: 'public', allowDownload: true },
+  douyin: {
+    title: '', description: '', productTitle: '', productLink: '', aiContent: '', isOriginal: false,
+    scheduleTime: '', visibility: 'public', allowDownload: true,
+    // 图文发布特有
+    mixId: '',           // 合集ID
+    activityId: '',      // 官方活动ID
+    hotspotId: '',       // 热点ID
+    selectedMusic: null, // 选中的音乐
+    declaration: '',     // 自主声明
+  },
   xiaohongshu: { title: '', description: '', collection: '', groupChat: '', location: '', aiContent: '', isOriginal: false, scheduleTime: '' },
   kuaishou: { title: '', description: '', productTitle: '', productLink: '', aiContent: '', isOriginal: false, scheduleTime: '' },
 })
+
+// ========== 抖音音乐抽屉状态 ==========
+const musicDrawerVisible = ref(false)
 
 // ========== Account-level Overrides ==========
 const accountOverrides = reactive({})
@@ -874,6 +983,44 @@ function toggleRecommendedTopic(topic) {
   } else {
     commonConfig.topics.push(topic)
   }
+}
+
+// ========== 抖音图文发布 Methods ==========
+
+function handleActivityChange(activity) {
+  if (activity) {
+    // 如果选择了活动，自动添加活动话题
+    if (activity.challenge && activity.challenge.length > 0) {
+      for (const topic of activity.challenge) {
+        if (!commonConfig.topics.includes(topic)) {
+          commonConfig.topics.push(topic)
+        }
+      }
+    }
+  }
+}
+
+function handleMixChange(mix) {
+  // 合集选择变化
+  console.log('Mix changed:', mix)
+}
+
+function handleHotspotChange(hotspot) {
+  if (hotspot) {
+    // 如果选择了热点，自动添加到话题
+    if (!commonConfig.topics.includes(hotspot.word)) {
+      commonConfig.topics.push(hotspot.word)
+    }
+  }
+}
+
+function handleMusicSelect(music) {
+  form.selectedMusic = music
+  ElMessage.success('音乐已选择')
+}
+
+function onMusicCoverError(e) {
+  e.target.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PHJlY3Qgd2lkdGg9IjQwIiBoZWlnaHQ9IjQwIiBmaWxsPSIjZjVmNWY1Ii8+PHRleHQgeD0iMjAiIHk9IjI0IiBmb250LWZhbWlseT0iQXJpYWwiIGZvbnQtc2l6ZT0iMTIiIGZpbGw9IiM5OTkiIHRleHQtYW5jaG9yPSJtaWRkbGUiPvCflKQ8L3RleHQ+PC9zdmc+'
 }
 
 // ========== Account Dialog Methods ==========
@@ -2327,5 +2474,50 @@ onBeforeUnmount(() => {
   padding: 40px 0;
   color: $text-muted;
   font-size: 14px;
+}
+
+// ========== 抖音图文发布 Styles ==========
+.setting-hint {
+  font-size: 12px;
+  color: $text-muted;
+  font-style: italic;
+}
+
+.selected-music {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px;
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: $radius-sm;
+
+  .music-info {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex: 1;
+    min-width: 0;
+  }
+
+  .music-cover {
+    width: 40px;
+    height: 40px;
+    border-radius: 4px;
+    object-fit: cover;
+    flex-shrink: 0;
+  }
+
+  .music-name {
+    font-size: 14px;
+    color: $text-primary;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .music-author {
+    font-size: 12px;
+    color: $text-secondary;
+  }
 }
 </style>
