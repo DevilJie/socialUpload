@@ -226,12 +226,9 @@
             <div class="setting-card" :style="{ borderColor: currentPlatformConfig.color + '26', background: currentPlatformConfig.color + '0a' }">
               <div class="setting-label" :style="{ color: currentPlatformConfig.color }">官方活动</div>
               <DouyinActivitySelect
-                v-if="selectedAccountId"
-                :account-id="selectedAccountId"
                 v-model="form.activityId"
                 @change="handleActivityChange"
               />
-              <div v-else class="setting-hint">请先选择一个抖音账号</div>
             </div>
 
             <!-- 添加合集 -->
@@ -267,24 +264,19 @@
                 v-else
                 size="small"
                 @click="musicDrawerVisible = true"
-                :disabled="!selectedAccountId"
               >
                 <el-icon><VideoPlay /></el-icon>
                 选择音乐
               </el-button>
-              <div v-if="!selectedAccountId" class="setting-hint">请先选择一个抖音账号</div>
             </div>
 
             <!-- 关联热点 -->
             <div class="setting-card" :style="{ borderColor: currentPlatformConfig.color + '26', background: currentPlatformConfig.color + '0a' }">
               <div class="setting-label" :style="{ color: currentPlatformConfig.color }">关联热点</div>
               <DouyinHotspotSelect
-                v-if="selectedAccountId"
-                :account-id="selectedAccountId"
                 v-model="form.hotspotId"
                 @change="handleHotspotChange"
               />
-              <div v-else class="setting-hint">请先选择一个抖音账号</div>
             </div>
 
             <!-- 自主声明 -->
@@ -302,94 +294,6 @@
               </el-select>
             </div>
           </template>
-
-          <div class="settings-grid">
-            <template v-for="field in imagePlatformSettingsFields" :key="field.key">
-              <template v-if="field.key !== 'title' && field.key !== 'description'">
-                <div
-                  class="setting-card"
-                  :style="{ borderColor: currentPlatformConfig.color + '26', background: currentPlatformConfig.color + '0a' }"
-                >
-                  <div class="setting-label" :style="{ color: currentPlatformConfig.color }">{{ field.label }}</div>
-                  <div v-if="field.description" class="setting-desc">{{ field.description }}</div>
-
-                  <el-input
-                    v-if="field.type === 'input'"
-                    v-model="form[field.key]"
-                    :placeholder="field.placeholder"
-                    size="small"
-                  />
-                  <el-switch
-                    v-else-if="field.type === 'switch'"
-                    v-model="form[field.key]"
-                  />
-                  <div v-else-if="field.type === 'radio'" class="radio-row">
-                    <label
-                      v-for="opt in field.options"
-                      :key="String(opt.value)"
-                      class="radio-item cursor-pointer"
-                    >
-                      <input
-                        type="radio"
-                        :name="(selectedAccountId || selectedPlatform) + '-' + field.key"
-                        :value="opt.value"
-                        v-model="form[field.key]"
-                        class="cursor-pointer"
-                      />
-                      <span
-                        :class="['radio-text', { on: form[field.key] === opt.value }]"
-                        :style="form[field.key] === opt.value ? { borderColor: currentPlatformConfig.color, color: currentPlatformConfig.color } : {}"
-                      >{{ opt.label }}</span>
-                    </label>
-                  </div>
-                  <el-select
-                    v-else-if="field.type === 'select'"
-                    v-model="form[field.key]"
-                    :placeholder="field.placeholder"
-                    size="small"
-                    clearable
-                    class="cursor-pointer"
-                  >
-                    <el-option
-                      v-for="opt in (field.options || [])"
-                      :key="opt.value"
-                      :label="opt.label"
-                      :value="opt.value"
-                    />
-                    <el-option v-if="!field.options || field.options.length === 0" label="暂无可选项" :value="''" disabled />
-                  </el-select>
-                  <el-select
-                    v-else-if="field.type === 'multiSelect'"
-                    v-model="form[field.key]"
-                    :placeholder="field.placeholder"
-                    size="small"
-                    multiple
-                    collapse-tags
-                    collapse-tags-tooltip
-                    clearable
-                    class="cursor-pointer"
-                  >
-                    <el-option
-                      v-for="opt in (field.options || [])"
-                      :key="opt.value"
-                      :label="opt.label"
-                      :value="opt.value"
-                    />
-                    <el-option v-if="!field.options || field.options.length === 0" label="暂无可选项" :value="''" disabled />
-                  </el-select>
-                  <el-date-picker
-                    v-else-if="field.type === 'datetime'"
-                    v-model="form[field.key]"
-                    type="datetime"
-                    :placeholder="field.placeholder"
-                    value-format="YYYY-MM-DD HH:mm:ss"
-                    size="small"
-                    class="cursor-pointer"
-                  />
-                </div>
-              </template>
-            </template>
-          </div>
         </div>
 
         <!-- No platform selected hint -->
@@ -571,7 +475,6 @@
 
     <!-- 抖音音乐选择抽屉 -->
     <DouyinMusicDrawer
-      v-if="selectedAccountId"
       v-model="musicDrawerVisible"
       :account-id="selectedAccountId"
       @select="handleMusicSelect"
@@ -699,10 +602,9 @@ const currentPlatformConfig = computed(() =>
   selectedPlatform.value ? getPlatformByKey(selectedPlatform.value) : null
 )
 
-// Image platform settings fields (exclude videoFormat)
+// 图文发布不需要 platformSettingsFields，所有配置都在模板中直接定义
 const imagePlatformSettingsFields = computed(() => {
-  if (!currentPlatformConfig.value) return []
-  return (currentPlatformConfig.value.settingsFields || []).filter(f => f.key !== 'videoFormat')
+  return []
 })
 
 // ========== Public Config (shared across all accounts) ==========
@@ -716,17 +618,16 @@ const currentPreviewIndex = ref(0)
 // ========== Per-platform Config ==========
 const platformConfigs = reactive({
   douyin: {
-    title: '', description: '', productTitle: '', productLink: '', aiContent: '', isOriginal: false,
-    scheduleTime: '', visibility: 'public', allowDownload: true,
+    title: '', description: '',
     // 图文发布特有
-    mixId: '',           // 合集ID
+    mixId: '',           // 合集ID（账号级）
     activityId: '',      // 官方活动ID
     hotspotId: '',       // 热点ID
     selectedMusic: null, // 选中的音乐
     declaration: '',     // 自主声明
   },
-  xiaohongshu: { title: '', description: '', collection: '', groupChat: '', location: '', aiContent: '', isOriginal: false, scheduleTime: '' },
-  kuaishou: { title: '', description: '', productTitle: '', productLink: '', aiContent: '', isOriginal: false, scheduleTime: '' },
+  xiaohongshu: { title: '', description: '' },
+  kuaishou: { title: '', description: '' },
 })
 
 // ========== 抖音音乐抽屉状态 ==========

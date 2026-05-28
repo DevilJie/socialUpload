@@ -47,7 +47,7 @@ import { douyinImageApi } from '@/api/douyinImage'
 const props = defineProps({
   accountId: {
     type: [String, Number],
-    required: true
+    default: ''
   },
   modelValue: {
     type: String,
@@ -68,7 +68,7 @@ watch(() => props.modelValue, (val) => {
 let searchTimer = null
 
 async function searchHotspot(keyword) {
-  if (!keyword || !props.accountId) return
+  if (!keyword) return
 
   // 防抖
   if (searchTimer) clearTimeout(searchTimer)
@@ -76,7 +76,7 @@ async function searchHotspot(keyword) {
   searchTimer = setTimeout(async () => {
     loading.value = true
     try {
-      const resp = await douyinImageApi.searchHotspot(props.accountId, keyword)
+      const resp = await douyinImageApi.searchHotspot(props.accountId || '', keyword)
       if (resp.code === 200) {
         hotspotList.value = resp.data?.sentences || []
       }

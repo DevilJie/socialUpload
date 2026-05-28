@@ -98,7 +98,7 @@ const props = defineProps({
   },
   accountId: {
     type: [String, Number],
-    required: true
+    default: ''
   }
 })
 
@@ -147,12 +147,12 @@ function resetAndSearch() {
 }
 
 async function searchMusic() {
-  if (!keyword.value || !props.accountId || !hasMore.value) return
+  if (!keyword.value || !hasMore.value) return
 
   loading.value = true
   try {
     const resp = await douyinImageApi.searchMusic(
-      props.accountId,
+      props.accountId || '',
       keyword.value,
       cursor.value
     )

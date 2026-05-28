@@ -129,19 +129,23 @@ def get_mix_list():
 def get_activity_list():
     """获取官方活动列表"""
     account_id = request.args.get('account_id')
-    if not account_id:
-        return jsonify({"code": 400, "msg": "缺少account_id参数"}), 400
 
     try:
         import sqlite3
         conn = sqlite3.connect(str(Path(BASE_DIR / "db" / "database.db")))
         cursor = conn.cursor()
-        cursor.execute("SELECT filePath FROM user_info WHERE id = ?", (account_id,))
+
+        if account_id:
+            cursor.execute("SELECT filePath FROM user_info WHERE id = ?", (account_id,))
+        else:
+            # 如果没有指定账号，使用第一个抖音账号
+            cursor.execute("SELECT filePath FROM user_info WHERE type = 3 LIMIT 1")
+
         row = cursor.fetchone()
         conn.close()
 
         if not row:
-            return jsonify({"code": 404, "msg": "账号不存在"}), 404
+            return jsonify({"code": 404, "msg": "没有可用的抖音账号"}), 404
 
         cookie_file = row[0]
 
@@ -166,19 +170,21 @@ def search_hotspot():
     keyword = request.args.get('keyword', '')
     count = request.args.get('count', '50')
 
-    if not account_id:
-        return jsonify({"code": 400, "msg": "缺少account_id参数"}), 400
-
     try:
         import sqlite3
         conn = sqlite3.connect(str(Path(BASE_DIR / "db" / "database.db")))
         cursor = conn.cursor()
-        cursor.execute("SELECT filePath FROM user_info WHERE id = ?", (account_id,))
+
+        if account_id:
+            cursor.execute("SELECT filePath FROM user_info WHERE id = ?", (account_id,))
+        else:
+            cursor.execute("SELECT filePath FROM user_info WHERE type = 3 LIMIT 1")
+
         row = cursor.fetchone()
         conn.close()
 
         if not row:
-            return jsonify({"code": 404, "msg": "账号不存在"}), 404
+            return jsonify({"code": 404, "msg": "没有可用的抖音账号"}), 404
 
         cookie_file = row[0]
 
@@ -205,9 +211,6 @@ def search_music():
     cursor_val = request.args.get('cursor', '0')
     count = request.args.get('count', '20')
 
-    if not account_id:
-        return jsonify({"code": 400, "msg": "缺少account_id参数"}), 400
-
     if not keyword:
         return jsonify({"code": 400, "msg": "缺少keyword参数"}), 400
 
@@ -215,12 +218,17 @@ def search_music():
         import sqlite3
         conn = sqlite3.connect(str(Path(BASE_DIR / "db" / "database.db")))
         cursor = conn.cursor()
-        cursor.execute("SELECT filePath FROM user_info WHERE id = ?", (account_id,))
+
+        if account_id:
+            cursor.execute("SELECT filePath FROM user_info WHERE id = ?", (account_id,))
+        else:
+            cursor.execute("SELECT filePath FROM user_info WHERE type = 3 LIMIT 1")
+
         row = cursor.fetchone()
         conn.close()
 
         if not row:
-            return jsonify({"code": 404, "msg": "账号不存在"}), 404
+            return jsonify({"code": 404, "msg": "没有可用的抖音账号"}), 404
 
         cookie_file = row[0]
 

@@ -48,7 +48,7 @@ import { douyinImageApi } from '@/api/douyinImage'
 const props = defineProps({
   accountId: {
     type: [String, Number],
-    required: true
+    default: ''
   },
   modelValue: {
     type: [String, Number],
@@ -71,11 +71,9 @@ onMounted(() => {
 })
 
 async function loadActivityList() {
-  if (!props.accountId) return
-
   loading.value = true
   try {
-    const resp = await douyinImageApi.getActivityList(props.accountId)
+    const resp = await douyinImageApi.getActivityList(props.accountId || '')
     if (resp.code === 200) {
       activityList.value = resp.data?.activity_list || []
     }
