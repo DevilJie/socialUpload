@@ -81,11 +81,11 @@
       <div v-else class="draft-grid">
         <div v-for="draft in imageDrafts" :key="draft.id" class="draft-card">
           <div class="card-cover image-cover">
-            <div v-if="draft.image_ids && draft.image_ids.length > 0" class="image-grid-preview">
+            <div v-if="draft.image_urls && draft.image_urls.length > 0" class="image-grid-preview">
               <img
-                v-for="(imgId, idx) in draft.image_ids.slice(0, 4)"
+                v-for="(url, idx) in draft.image_urls.slice(0, 4)"
                 :key="idx"
-                :src="getImagePreviewUrl(imgId)"
+                :src="getImageUrl(url)"
                 alt="图片"
                 class="grid-image"
               />
@@ -158,10 +158,10 @@ function getCoverUrl(path) {
   return `${apiBaseUrl}${path.startsWith('/') ? '' : '/'}${path}`
 }
 
-function getImagePreviewUrl(imageId) {
-  // 这里需要根据实际的图片存储路径来构建 URL
-  // 暂时返回一个占位图
-  return `data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCIgZmlsbD0iIzIyMiIvPjx0ZXh0IHg9IjUwIiB5PSI1MCIgZm9udC1mYW1pbHk9IkFyaWFsIiBmb250LXNpemU9IjEyIiBmaWxsPSIjNjY2IiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBkeT0iLjNlbSI+5Zu+54mH5Yqg6L295aSx6LSlPC90ZXh0Pjwvc3ZnPg==`
+function getImageUrl(path) {
+  if (!path) return ''
+  if (path.startsWith('http')) return path
+  return `${apiBaseUrl}${path.startsWith('/') ? '' : '/'}${path}`
 }
 
 function getPlatformLogo(platformKey) {

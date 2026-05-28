@@ -205,6 +205,19 @@ def get_drafts():
                 d['account_configs'] = json.loads(d.get('account_configs', '[]'))
             except json.JSONDecodeError:
                 d['account_configs'] = []
+
+            # 获取图片 URL 列表
+            image_urls = []
+            for img_id in d['image_ids']:
+                img_row = conn.execute(
+                    "SELECT stored_filename FROM image_records WHERE id = ?", (img_id,)
+                ).fetchone()
+                if img_row:
+                    image_urls.append(f"/api/image-publish/files/{img_row['stored_filename']}")
+                else:
+                    image_urls.append(None)
+            d['image_urls'] = image_urls
+
             drafts.append(d)
 
         conn.close()
