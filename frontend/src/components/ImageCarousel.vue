@@ -194,7 +194,8 @@ defineExpose({
 
 .carousel-image {
   width: 100%;
-  height: auto;
+  height: 100%;
+  object-fit: cover;
   display: block;
 }
 
@@ -220,8 +221,8 @@ defineExpose({
   width: 36px;
   height: 36px;
   border-radius: 50%;
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  background: rgba(0, 0, 0, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  background: rgba(0, 0, 0, 0.6);
   color: rgba(255, 255, 255, 0.9);
   display: flex;
   align-items: center;
@@ -229,7 +230,6 @@ defineExpose({
   cursor: pointer;
   transition: $transition-base;
   z-index: 10;
-  opacity: 0;
   backdrop-filter: blur(4px);
 
   &.left {
@@ -241,13 +241,14 @@ defineExpose({
   }
 
   &:hover:not(:disabled) {
-    background: rgba(0, 0, 0, 0.7);
-    border-color: rgba(255, 255, 255, 0.4);
+    background: rgba(0, 0, 0, 0.8);
+    border-color: rgba(255, 255, 255, 0.5);
+    transform: translateY(-50%) scale(1.1);
   }
 
   &.disabled,
   &:disabled {
-    opacity: 0;
+    opacity: 0.3;
     cursor: not-allowed;
   }
 }
