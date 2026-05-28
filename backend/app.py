@@ -54,6 +54,10 @@ from routes.frames import frames_bp  # noqa: E402
 app.register_blueprint(frames_bp)
 logger.info("[Startup] frames_bp registered OK")
 
+from blueprints.image_publish_bp import image_publish_bp  # noqa: E402
+app.register_blueprint(image_publish_bp)
+logger.info("[Startup] image_publish_bp registered OK")
+
 FRONTEND_DIR = Path(__file__).parent.parent / "frontend"
 logger.info(f"[Startup] Frontend dir: {FRONTEND_DIR} (exists={FRONTEND_DIR.exists()})")
 

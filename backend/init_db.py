@@ -136,6 +136,19 @@ def init_database():
     )
     """)
 
+    # 图片上传记录表
+    cursor.execute("""
+    CREATE TABLE IF NOT EXISTS image_records (
+        id TEXT PRIMARY KEY,
+        original_filename TEXT NOT NULL,
+        stored_filename TEXT NOT NULL,
+        filesize REAL DEFAULT 0,
+        width INTEGER DEFAULT 0,
+        height INTEGER DEFAULT 0,
+        upload_time DATETIME DEFAULT CURRENT_TIMESTAMP
+    )
+    """)
+
     conn.commit()
     conn.close()
     logger.info(f"Database initialized at {DB_PATH}")
