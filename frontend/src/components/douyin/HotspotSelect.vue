@@ -15,7 +15,7 @@
         v-for="item in hotspotList"
         :key="item.sentence_id"
         :label="item.word"
-        :value="item.sentence_id"
+        :value="item.word"
       >
         <div class="hotspot-option">
           <img
@@ -90,7 +90,7 @@ async function searchHotspot(keyword) {
 
 function handleChange(val) {
   emit('update:modelValue', val)
-  const hotspot = hotspotList.value.find(h => h.sentence_id === val)
+  const hotspot = hotspotList.value.find(h => h.word === val)
   emit('change', hotspot || null)
 }
 

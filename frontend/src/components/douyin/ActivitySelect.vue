@@ -13,7 +13,7 @@
         v-for="activity in activityList"
         :key="activity.activity_id"
         :label="activity.activity_name"
-        :value="activity.activity_id"
+        :value="activity.activity_name"
       >
         <div class="activity-option">
           <img
@@ -86,7 +86,7 @@ async function loadActivityList() {
 
 function handleChange(val) {
   emit('update:modelValue', val)
-  const activity = activityList.value.find(a => a.activity_id === val)
+  const activity = activityList.value.find(a => a.activity_name === val)
   emit('change', activity || null)
 }
 

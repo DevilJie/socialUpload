@@ -14,8 +14,8 @@
       <el-option
         v-for="music in musicList"
         :key="music.id"
-        :label="music.title"
-        :value="music.id"
+        :label="`${music.title} - ${music.author}`"
+        :value="music.title"
       >
         <div class="music-option">
           <img
@@ -48,8 +48,8 @@ const props = defineProps({
     default: ''
   },
   modelValue: {
-    type: Object,
-    default: null
+    type: String,
+    default: ''
   }
 })
 
@@ -57,10 +57,10 @@ const emit = defineEmits(['update:modelValue', 'change'])
 
 const loading = ref(false)
 const musicList = ref([])
-const selectedMusicId = ref(props.modelValue?.id || '')
+const selectedMusicId = ref(props.modelValue || '')
 
 watch(() => props.modelValue, (val) => {
-  selectedMusicId.value = val?.id || ''
+  selectedMusicId.value = val || ''
 })
 
 let searchTimer = null
@@ -91,7 +91,7 @@ async function searchMusic(keyword) {
 
 function handleChange(val) {
   if (val) {
-    const music = musicList.value.find(m => m.id === val)
+    const music = musicList.value.find(m => m.title === val)
     emit('update:modelValue', music)
     emit('change', music)
   } else {

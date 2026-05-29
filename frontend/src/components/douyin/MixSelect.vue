@@ -13,7 +13,7 @@
         v-for="mix in mixList"
         :key="mix.mix_id"
         :label="mix.mix_name"
-        :value="mix.mix_id"
+        :value="mix.mix_name"
       >
         <div class="mix-option">
           <img
@@ -46,7 +46,7 @@ const props = defineProps({
     required: true
   },
   modelValue: {
-    type: [String, Number],
+    type: String,
     default: ''
   }
 })
@@ -83,7 +83,7 @@ async function loadMixList() {
 
 function handleChange(val) {
   emit('update:modelValue', val)
-  const mix = mixList.value.find(m => m.mix_id === val)
+  const mix = mixList.value.find(m => m.mix_name === val)
   emit('change', mix || null)
 }
 

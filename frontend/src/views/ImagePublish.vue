@@ -239,6 +239,7 @@
                   <div class="setting-item">
                     <div class="setting-label" :style="{ color: currentPlatformConfig.color }">选择音乐</div>
                     <DouyinMusicSelect
+                      :account-id="selectedAccountId"
                       v-model="form.selectedMusic"
                       @change="handleMusicSelect"
                     />
@@ -906,7 +907,9 @@ function handleHotspotChange(hotspot) {
 
 function handleMusicSelect(music) {
   form.selectedMusic = music
-  ElMessage.success('音乐已选择')
+  if (music) {
+    ElMessage.success(`音乐已选择: ${music.title}`)
+  }
 }
 
 function onMusicCoverError(e) {
