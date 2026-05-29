@@ -404,12 +404,13 @@ defineExpose({
   aspect-ratio: 3 / 4;
   border-radius: $radius-sm;
   overflow: hidden;
-  background: $bg-base;
+  background: rgba(10, 10, 26, 0.6);
   border: 2px solid transparent;
-  transition: $transition-base;
+  transition: all 0.3s ease;
 
   &:hover {
-    border-color: $border-active;
+    border-color: rgba(139, 92, 246, 0.3);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
 
     .image-overlay {
       opacity: 1;
@@ -542,7 +543,7 @@ defineExpose({
 
 .upload-trigger {
   aspect-ratio: 3 / 4;
-  border: 2px dashed $border;
+  border: 2px dashed rgba(255, 255, 255, 0.1);
   border-radius: $radius-sm;
   display: flex;
   flex-direction: column;
@@ -550,20 +551,22 @@ defineExpose({
   justify-content: center;
   gap: 8px;
   cursor: pointer;
-  transition: $transition-base;
-  background: $bg-surface;
+  transition: all 0.3s ease;
+  background: rgba(255, 255, 255, 0.02);
   color: $text-muted;
 
   &:hover {
     border-color: $brand-start;
     color: $brand-start;
     background: rgba($brand-start, 0.04);
+    box-shadow: 0 0 20px rgba(139, 92, 246, 0.08);
   }
 
   &.drag-over {
     border-color: $brand-start;
     background: rgba($brand-start, 0.08);
     border-style: solid;
+    box-shadow: 0 0 24px rgba(139, 92, 246, 0.15);
 
     .el-icon {
       color: $brand-start;
@@ -572,12 +575,12 @@ defineExpose({
   }
 
   .el-icon {
-    transition: transform $transition-fast;
+    transition: transform 0.3s ease;
   }
 
   .upload-text {
     font-size: 13px;
-    font-weight: 500;
+    font-weight: 600;
   }
 
   .upload-hint {

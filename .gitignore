@@ -36,6 +36,7 @@ docs/superpowers/.claude/
 src-tauri/bundle-resources/*
 src-tauri/*.exe
 data/frames/*
+data/image-publish/*
 backend/bin/
 
 # 启动脚本临时文件

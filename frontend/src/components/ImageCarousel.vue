@@ -215,37 +215,39 @@ defineExpose({
   position: absolute;
   top: 50%;
   transform: translateY(-50%);
-  width: 36px;
-  height: 36px;
+  width: 32px;
+  height: 32px;
   border-radius: 50%;
-  border: 1px solid rgba(255, 255, 255, 0.3);
-  background: rgba(0, 0, 0, 0.6);
-  color: rgba(255, 255, 255, 0.9);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  background: rgba(0, 0, 0, 0.5);
+  color: rgba(255, 255, 255, 0.85);
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  transition: $transition-base;
+  transition: all 0.25s ease;
   z-index: 10;
-  backdrop-filter: blur(4px);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
 
   &.left {
-    left: 8px;
+    left: 6px;
   }
 
   &.right {
-    right: 8px;
+    right: 6px;
   }
 
   &:hover:not(:disabled) {
-    background: rgba(0, 0, 0, 0.8);
-    border-color: rgba(255, 255, 255, 0.5);
-    transform: translateY(-50%) scale(1.1);
+    background: rgba(0, 0, 0, 0.7);
+    border-color: rgba(255, 255, 255, 0.3);
+    transform: translateY(-50%) scale(1.08);
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.3);
   }
 
   &.disabled,
   &:disabled {
-    opacity: 0.3;
+    opacity: 0.2;
     cursor: not-allowed;
   }
 }
@@ -255,28 +257,30 @@ defineExpose({
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 6px;
+  gap: 5px;
   flex-wrap: wrap;
   max-width: 100%;
   padding: 4px;
 }
 
 .indicator-dot {
-  width: 8px;
-  height: 8px;
+  width: 6px;
+  height: 6px;
   border-radius: 50%;
-  background: rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.15);
   cursor: pointer;
-  transition: $transition-fast;
+  transition: all 0.25s ease;
 
   &:hover {
-    background: rgba(255, 255, 255, 0.4);
+    background: rgba(255, 255, 255, 0.35);
+    transform: scale(1.2);
   }
 
   &.active {
-    width: 20px;
+    width: 18px;
     border-radius: 4px;
-    background: $brand-start;
+    background: linear-gradient(90deg, $brand-start, $brand-end);
+    box-shadow: 0 0 8px rgba(139, 92, 246, 0.3);
   }
 }
 
