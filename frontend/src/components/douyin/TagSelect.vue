@@ -1,69 +1,71 @@
 <template>
   <div class="tag-select">
     <!-- 标签类型选择 -->
-    <div class="tag-type-selector">
-      <el-radio-group v-model="selectedType" size="small">
-        <el-radio-button label="poi">位置</el-radio-button>
-        <el-radio-button label="miniapp">小程序</el-radio-button>
-        <el-radio-button label="game">游戏手柄</el-radio-button>
-        <el-radio-button label="mark">标记万物</el-radio-button>
-      </el-radio-group>
-    </div>
+    <el-select
+      v-model="selectedType"
+      placeholder="选择标签类型"
+      style="width: 100%"
+      @change="handleTypeChange"
+    >
+      <el-option label="位置" value="poi" />
+      <el-option label="小程序" value="miniapp" />
+      <el-option label="游戏手柄" value="game" />
+      <el-option label="标记万物" value="mark" />
+    </el-select>
 
     <!-- 搜索和选择区域 -->
-    <div class="tag-search-area">
-      <el-select
-        v-model="selectedTagId"
-        :placeholder="getPlaceholder()"
-        clearable
-        filterable
-        no-data-text=" "
-        @change="handleChange"
-        style="width: 100%"
+    <el-select
+      v-if="selectedType"
+      v-model="selectedTagId"
+      :placeholder="getPlaceholder()"
+      clearable
+      filterable
+      no-data-text=" "
+      @change="handleChange"
+      style="width: 100%; margin-top: 8px;"
+    >
+      <template #header>
+        <div class="search-input-wrapper">
+          <el-input
+            v-model="searchKeyword"
+            :placeholder="getSearchPlaceholder()"
+            clearable
+            @keyup.enter="handleSearch"
+            @clear="handleClear"
+          >
+            <template #prefix>
+              <el-icon><Search /></el-icon>
+            </template>
+          </el-input>
+        </div>
+        <div v-if="loading" class="loading-indicator">
+          <el-icon class="is-loading"><Loading /></el-icon>
+          <span>加载中...</span>
+        </div>
+      </template>
+      <el-option
+        v-for="tag in tagList"
+        :key="tag.id"
+        :label="tag.name"
+        :value="tag.id"
       >
-        <template #header>
-          <div class="search-input-wrapper">
-            <el-input
-              v-model="searchKeyword"
-              :placeholder="getSearchPlaceholder()"
-              clearable
-              @keyup.enter="handleSearch"
-              @clear="handleClear"
-            >
-              <template #prefix>
-                <el-icon><Search /></el-icon>
-              </template>
-            </el-input>
+        <div class="tag-option">
+          <img
+            v-if="tag.icon"
+            :src="tag.icon"
+            class="tag-icon"
+            @error="onImageError"
+          />
+          <div v-else class="tag-icon-placeholder">
+            <el-icon><component :is="getTagIcon()" /></el-icon>
           </div>
-          <div v-if="loading" class="loading-indicator">
-            <el-icon class="is-loading"><Loading /></el-icon>
-            <span>加载中...</span>
+          <div class="tag-info">
+            <div class="tag-name">{{ tag.name }}</div>
+            <div class="tag-meta" v-if="tag.desc">{{ tag.desc }}</div>
           </div>
-        </template>
-        <el-option
-          v-for="tag in tagList"
-          :key="tag.id"
-          :label="tag.name"
-          :value="tag.id"
-        >
-          <div class="tag-option">
-            <img
-              v-if="tag.icon"
-              :src="tag.icon"
-              class="tag-icon"
-              @error="onImageError"
-            />
-            <div v-else class="tag-icon-placeholder">
-              <el-icon><component :is="getTagIcon()" /></el-icon>
-            </div>
-            <div class="tag-info">
-              <div class="tag-name">{{ tag.name }}</div>
-              <div class="tag-meta" v-if="tag.desc">{{ tag.desc }}</div>
-            </div>
-          </div>
-        </el-option>
-      </el-select>
-    </div>
+        </div>
+      </el-option>
+    </el-select>
   </div>
 </template>
 
@@ -85,7 +87,7 @@ const props = defineProps({
 
 const emit = defineEmits(['update:modelValue', 'change'])
 
-const selectedType = ref('poi')
+const selectedType = ref('')
 const loading = ref(false)
 const tagList = ref([])
 const selectedTagId = ref('')
@@ -93,12 +95,21 @@ const searchKeyword = ref('')
 
 watch(() => props.modelValue, (val) => {
   if (val) {
-    selectedType.value = val.type || 'poi'
+    selectedType.value = val.type || ''
     selectedTagId.value = val.id || ''
   } else {
     selectedTagId.value = ''
   }
 })
+
+function handleTypeChange() {
+  // 切换类型时清空搜索结果和已选标签
+  tagList.value = []
+  searchKeyword.value = ''
+  selectedTagId.value = ''
+  emit('update:modelValue', null)
+  emit('change', null)
+}
 
 function getPlaceholder() {
   const placeholders = {
@@ -226,42 +237,6 @@ function onImageError(e) {
 
 <style scoped lang="scss">
 .tag-select {
-  width: 100%;
-}
-
-.tag-type-selector {
-  margin-bottom: 12px;
-
-  :deep(.el-radio-group) {
-    display: flex;
-    width: 100%;
-
-    .el-radio-button {
-      flex: 1;
-
-      .el-radio-button__inner {
-        width: 100%;
-        padding: 8px 12px;
-        font-size: 13px;
-        background: #1a1a2e;
-        border-color: #2d2d44;
-        color: #94a3b8;
-
-        &:hover {
-          color: #f8fafc;
-        }
-      }
-
-      &.is-active .el-radio-button__inner {
-        background: #f97316;
-        border-color: #f97316;
-        color: #fff;
-      }
-    }
-  }
-}
-
-.tag-search-area {
   width: 100%;
 }
 
