@@ -1,71 +1,73 @@
 <template>
   <div class="tag-select">
-    <!-- 标签类型选择 -->
-    <el-select
-      v-model="selectedType"
-      placeholder="选择标签类型"
-      style="width: 100%"
-      @change="handleTypeChange"
-    >
-      <el-option label="位置" value="poi" />
-      <el-option label="小程序" value="miniapp" />
-      <el-option label="游戏手柄" value="game" />
-      <el-option label="标记万物" value="mark" />
-    </el-select>
-
-    <!-- 搜索和选择区域 -->
-    <el-select
-      v-if="selectedType"
-      v-model="selectedTagId"
-      :placeholder="getPlaceholder()"
-      clearable
-      filterable
-      no-data-text=" "
-      @change="handleChange"
-      style="width: 100%; margin-top: 8px;"
-    >
-      <template #header>
-        <div class="search-input-wrapper">
-          <el-input
-            v-model="searchKeyword"
-            :placeholder="getSearchPlaceholder()"
-            clearable
-            @keyup.enter="handleSearch"
-            @clear="handleClear"
-          >
-            <template #prefix>
-              <el-icon><Search /></el-icon>
-            </template>
-          </el-input>
-        </div>
-        <div v-if="loading" class="loading-indicator">
-          <el-icon class="is-loading"><Loading /></el-icon>
-          <span>加载中...</span>
-        </div>
-      </template>
-      <el-option
-        v-for="tag in tagList"
-        :key="tag.id"
-        :label="tag.name"
-        :value="tag.id"
+    <div class="tag-row">
+      <!-- 标签类型选择 -->
+      <el-select
+        v-model="selectedType"
+        placeholder="选择标签类型"
+        class="tag-type-select"
+        @change="handleTypeChange"
       >
-        <div class="tag-option">
-          <img
-            v-if="tag.icon"
-            :src="tag.icon"
-            class="tag-icon"
-            @error="onImageError"
-          />
-          <div v-else class="tag-icon-placeholder">
-            <el-icon><component :is="getTagIcon()" /></el-icon>
+        <el-option label="位置" value="poi" />
+        <el-option label="小程序" value="miniapp" />
+        <el-option label="游戏手柄" value="game" />
+        <el-option label="标记万物" value="mark" />
+      </el-select>
+
+      <!-- 搜索和选择区域 -->
+      <el-select
+        v-if="selectedType"
+        v-model="selectedTagId"
+        :placeholder="getPlaceholder()"
+        clearable
+        filterable
+        no-data-text=" "
+        class="tag-search-select"
+        @change="handleChange"
+      >
+        <template #header>
+          <div class="search-input-wrapper">
+            <el-input
+              v-model="searchKeyword"
+              :placeholder="getSearchPlaceholder()"
+              clearable
+              @keyup.enter="handleSearch"
+              @clear="handleClear"
+            >
+              <template #prefix>
+                <el-icon><Search /></el-icon>
+              </template>
+            </el-input>
           </div>
-          <div class="tag-info">
-            <div class="tag-name">{{ tag.name }}</div>
-            <div class="tag-meta" v-if="tag.desc">{{ tag.desc }}</div>
+          <div v-if="loading" class="loading-indicator">
+            <el-icon class="is-loading"><Loading /></el-icon>
+            <span>加载中...</span>
           </div>
-        </div>
-      </el-option>
-    </el-select>
+        </template>
+        <el-option
+          v-for="tag in tagList"
+          :key="tag.id"
+          :label="tag.name"
+          :value="tag.id"
+        >
+          <div class="tag-option">
+            <img
+              v-if="tag.icon"
+              :src="tag.icon"
+              class="tag-icon"
+              @error="onImageError"
+            />
+            <div v-else class="tag-icon-placeholder">
+              <el-icon><component :is="getTagIcon()" /></el-icon>
+            </div>
+            <div class="tag-info">
+              <div class="tag-name">{{ tag.name }}</div>
+              <div class="tag-meta" v-if="tag.desc">{{ tag.desc }}</div>
+            </div>
+          </div>
+        </el-option>
+      </el-select>
+    </div>
   </div>
 </template>
 
@@ -238,6 +240,21 @@ function onImageError(e) {
 <style scoped lang="scss">
 .tag-select {
   width: 100%;
+}
+
+.tag-row {
+  display: flex;
+  gap: 8px;
+}
+
+.tag-type-select {
+  width: 120px;
+  flex-shrink: 0;
+}
+
+.tag-search-select {
+  flex: 1;
+  min-width: 0;
 }
 
 .search-input-wrapper {
