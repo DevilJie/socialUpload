@@ -959,37 +959,33 @@ function confirmAccountSelection() {
 // ========== Publish Methods ==========
 
 async function saveDraft() {
-  const imageIds = commonConfig.images.map(img => img.id)
-  const accountConfigs = [...publishAccountIds].map(id => {
-    const account = accountStore.accounts.find(a => a.id === id)
-    const group = imageAccountGroups.value.find(g => g.accounts.some(a => a.id === id))
-    const pSettings = platformConfigs[group?.key] || {}
-    const accountOverride = accountOverrides[id]
-    const mergedSettings = accountOverride && Object.keys(accountOverride).length > 0
-      ? { ...pSettings, ...Object.fromEntries(
-          Object.entries(accountOverride).filter(([_, v]) => v !== undefined && v !== '' && v !== false)
-        )}
-      : { ...pSettings }
-    return {
-      account_id: id,
-      platform: account?.platform || '',
-      title: mergedSettings.title || '',
-      description: mergedSettings.description || '',
-      ...mergedSettings,
+  try {
+    const draftData = {
+      commonConfig: {
+        topics: [...commonConfig.topics],
+        images: commonConfig.images.map(img => ({ id: img.id, name: img.name, url: img.url, path: img.path, size: img.size, type: img.type })),
+      },
+      platformConfigs: JSON.parse(JSON.stringify(platformConfigs)),
+      accountOverrides: JSON.parse(JSON.stringify(accountOverrides)),
+      publishAccountIds: [...publishAccountIds],
+      selectedPlatform: selectedPlatform.value,
+      selectedAccountId: selectedAccountId.value,
+      expandedGroups: [...expandedGroups.value],
     }
-  })
 
-  if (currentDraftId.value) {
-    const resp = await imagePublishApi.saveDraft({ id: currentDraftId.value, image_ids: imageIds, account_configs: accountConfigs })
-    if (resp.code === 200) {
+    if (currentDraftId.value) {
+      await imagePublishApi.saveDraft({ id: currentDraftId.value, draft_data: draftData })
       ElMessage.success('草稿已更新')
+    } else {
+      const resp = await imagePublishApi.saveDraft({ draft_data: draftData })
+      if (resp.code === 200) {
+        currentDraftId.value = resp.data.id
+        ElMessage.success('草稿已保存')
+      }
     }
-  } else {
-    const resp = await imagePublishApi.saveDraft({ image_ids: imageIds, account_configs: accountConfigs })
-    if (resp.code === 200) {
-      currentDraftId.value = resp.data.id
-      ElMessage.success('草稿已保存')
-    }
+  } catch (e) {
+    console.error('保存草稿失败:', e)
+    ElMessage.error('草稿保存失败')
   }
 }
 
@@ -1211,45 +1207,64 @@ async function loadDraft(draftId) {
     if (resp.code === 200) {
       const draft = resp.data.find(d => d.id === draftId)
       if (draft) {
+        const dd = draft.draft_data
+        if (!dd) {
+          ElMessage.error('草稿数据为空')
+          return
+        }
+
         // 恢复草稿 ID
         currentDraftId.value = draft.id
 
-        // 恢复图片列表
-        if (draft.image_urls && draft.image_urls.length > 0) {
-          const baseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5409'
-          commonConfig.images = draft.image_ids.map((id, index) => ({
-            id: id,
-            name: `图片 ${index + 1}`,
-            url: draft.image_urls[index] ? `${baseUrl}${draft.image_urls[index]}` : '',
-            path: '',
-            size: 0,
-            type: 'image/jpeg',
-            uploading: false,
-            progress: 100,
-          }))
+        // 恢复 commonConfig
+        if (dd.commonConfig) {
+          if (dd.commonConfig.images) {
+            const baseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5409'
+            commonConfig.images = dd.commonConfig.images.map((img, index) => ({
+              id: img.id,
+              name: img.name || `图片 ${index + 1}`,
+              url: img.url || (img.id ? `${baseUrl}/api/image-publish/files/${img.id}` : ''),
+              path: img.path || '',
+              size: img.size || 0,
+              type: img.type || 'image/jpeg',
+              uploading: false,
+              progress: 100,
+            }))
+          }
+          if (dd.commonConfig.topics) {
+            commonConfig.topics = dd.commonConfig.topics
+          }
         }
 
-        // 恢复账号配置
-        if (draft.account_configs && draft.account_configs.length > 0) {
-          // 恢复选中的账号
-          publishAccountIds.clear()
-          draft.account_configs.forEach(config => {
-            publishAccountIds.add(config.account_id)
-
-            // 恢复平台配置
-            const account = accountStore.accounts.find(a => a.id === config.account_id)
-            if (account) {
-              const group = imageAccountGroups.value.find(g => g.key === getPlatformKeyByName(account.platform))
-              if (group) {
-                platformConfigs[group.key] = {
-                  ...platformConfigs[group.key],
-                  title: config.title || '',
-                  description: config.description || '',
-                  ...config,
-                }
-              }
+        // 恢复 platformConfigs（深度合并以保留可能新增的字段）
+        if (dd.platformConfigs) {
+          for (const [key, val] of Object.entries(dd.platformConfigs)) {
+            if (platformConfigs[key]) {
+              Object.assign(platformConfigs[key], val)
             }
-          })
+          }
+        }
+
+        // 恢复 accountOverrides
+        if (dd.accountOverrides) {
+          Object.keys(accountOverrides).forEach(k => delete accountOverrides[k])
+          Object.assign(accountOverrides, dd.accountOverrides)
+        }
+
+        // 恢复 publishAccountIds
+        if (dd.publishAccountIds) {
+          publishAccountIds.clear()
+          dd.publishAccountIds.forEach(id => publishAccountIds.add(id))
+        }
+
+        // 恢复 expandedGroups
+        if (dd.expandedGroups) {
+          expandedGroups.value = new Set(dd.expandedGroups)
+        }
+
+        // 恢复 selectedPlatform
+        if (dd.selectedPlatform) {
+          selectedPlatform.value = dd.selectedPlatform
         }
 
         ElMessage.success('草稿已加载')

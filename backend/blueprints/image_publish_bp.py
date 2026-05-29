@@ -197,14 +197,36 @@ def get_drafts():
         drafts = []
         for row in rows:
             d = dict(row)
-            try:
-                d['image_ids'] = json.loads(d.get('image_ids', '[]'))
-            except json.JSONDecodeError:
-                d['image_ids'] = []
-            try:
-                d['account_configs'] = json.loads(d.get('account_configs', '[]'))
-            except json.JSONDecodeError:
-                d['account_configs'] = []
+
+            # 优先解析 draft_data（新格式）
+            if d.get('draft_data'):
+                try:
+                    parsed = json.loads(d['draft_data'])
+                    d['draft_data'] = parsed
+                    # 从 draft_data 提取 image_ids
+                    common_config = parsed.get('commonConfig', {})
+                    images = common_config.get('images', [])
+                    d['image_ids'] = [img['id'] for img in images] if isinstance(images, list) else []
+                    d['commonConfig'] = common_config
+                    d['account_configs'] = parsed.get('accountConfigs', {})
+                    d['platformConfigs'] = parsed.get('platformConfigs', {})
+                    d['accountOverrides'] = parsed.get('accountOverrides', {})
+                    d['publishAccountIds'] = parsed.get('publishAccountIds', [])
+                    d['expandedGroups'] = parsed.get('expandedGroups', [])
+                    d['selectedPlatform'] = parsed.get('selectedPlatform', '')
+                    d['selectedAccountId'] = parsed.get('selectedAccountId', None)
+                except json.JSONDecodeError:
+                    d['image_ids'] = []
+            else:
+                # 旧格式兼容
+                try:
+                    d['image_ids'] = json.loads(d.get('image_ids', '[]'))
+                except json.JSONDecodeError:
+                    d['image_ids'] = []
+                try:
+                    d['account_configs'] = json.loads(d.get('account_configs', '[]'))
+                except json.JSONDecodeError:
+                    d['account_configs'] = []
 
             # 获取图片 URL 列表
             image_urls = []
@@ -234,9 +256,45 @@ def save_draft():
     if not data:
         return jsonify({"code": 400, "msg": "请求数据不能为空"}), 400
 
+    # 新格式：完整状态存储（与视频发布一致）
+    draft_data = data.get('draft_data')
+    if draft_data:
+        # 从 commonConfig.images 提取 image_ids
+        common_config = draft_data.get('commonConfig', {})
+        images = common_config.get('images', [])
+        image_ids = [img['id'] for img in images] if isinstance(images, list) else []
+        if not image_ids:
+            return jsonify({"code": 400, "msg": "请选择至少一张图片"}), 400
+        draft_id = data.get('id')
+        now = datetime.now().isoformat()
+        try:
+            conn = _get_db()
+            if draft_id:
+                changes = conn.execute(
+                    """UPDATE image_drafts SET draft_data=?, updated_at=? WHERE id=?""",
+                    (json.dumps(draft_data, ensure_ascii=False), now, draft_id)
+                ).rowcount
+                conn.commit()
+                conn.close()
+                if changes == 0:
+                    return jsonify({"code": 404, "msg": "草稿不存在"}), 404
+            else:
+                draft_id = str(uuid.uuid4())
+                conn.execute(
+                    """INSERT INTO image_drafts (id, draft_data, created_at, updated_at)
+                       VALUES (?, ?, ?, ?)""",
+                    (draft_id, json.dumps(draft_data, ensure_ascii=False), now, now)
+                )
+                conn.commit()
+                conn.close()
+            return jsonify({"code": 200, "msg": "草稿保存成功", "data": {"id": draft_id}})
+        except Exception as e:
+            logger.error(f"保存草稿失败: {e}")
+            return jsonify({"code": 500, "msg": f"保存失败: {str(e)}"}), 500
+
+    # 旧格式：兼容处理
     image_ids = data.get('image_ids', [])
     account_configs = data.get('account_configs', [])
-
     if not image_ids:
         return jsonify({"code": 400, "msg": "请选择至少一张图片"}), 400
 
@@ -245,13 +303,9 @@ def save_draft():
 
     try:
         conn = _get_db()
-
         if draft_id:
-            # 更新已有草稿
             changes = conn.execute(
-                """UPDATE image_drafts
-                   SET image_ids=?, account_configs=?, updated_at=?
-                   WHERE id=?""",
+                """UPDATE image_drafts SET image_ids=?, account_configs=?, updated_at=? WHERE id=?""",
                 (json.dumps(image_ids), json.dumps(account_configs, ensure_ascii=False), now, draft_id)
             ).rowcount
             conn.commit()
@@ -259,7 +313,6 @@ def save_draft():
             if changes == 0:
                 return jsonify({"code": 404, "msg": "草稿不存在"}), 404
         else:
-            # 创建新草稿
             draft_id = str(uuid.uuid4())
             conn.execute(
                 """INSERT INTO image_drafts (id, image_ids, account_configs, created_at, updated_at)
@@ -268,12 +321,7 @@ def save_draft():
             )
             conn.commit()
             conn.close()
-
-        return jsonify({
-            "code": 200,
-            "msg": "草稿保存成功",
-            "data": {"id": draft_id}
-        })
+        return jsonify({"code": 200, "msg": "草稿保存成功", "data": {"id": draft_id}})
     except Exception as e:
         logger.error(f"保存草稿失败: {e}")
         return jsonify({"code": 500, "msg": f"保存失败: {str(e)}"}), 500

@@ -173,6 +173,13 @@ def migrate_database():
     except sqlite3.OperationalError:
         pass  # 列已存在
 
+    # image_drafts 添加 draft_data 列（支持完整状态存储）
+    try:
+        cursor.execute('ALTER TABLE image_drafts ADD COLUMN draft_data TEXT DEFAULT "{}"')
+        logger.info("已添加 image_drafts.draft_data 列")
+    except sqlite3.OperationalError:
+        pass  # 列已存在
+
     conn.commit()
     conn.close()
 
