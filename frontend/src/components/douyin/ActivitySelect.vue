@@ -96,6 +96,8 @@ function onImageError(e) {
 </script>
 
 <style scoped lang="scss">
+@use '@/styles/variables' as *;
+
 .activity-select {
   width: 100%;
 }
@@ -119,11 +121,11 @@ function onImageError(e) {
   width: 40px;
   height: 40px;
   border-radius: 4px;
-  background: #fff3e0;
+  background: #27273B;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #ff9800;
+  color: #F97316;
   flex-shrink: 0;
 }
 
@@ -134,7 +136,7 @@ function onImageError(e) {
 
 .activity-name {
   font-size: 14px;
-  color: #333;
+  color: #F8FAFC;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -144,10 +146,10 @@ function onImageError(e) {
   display: flex;
   gap: 12px;
   font-size: 12px;
-  color: #999;
+  color: #94A3B8;
 }
 
 .activity-hot {
-  color: #ff4444;
+  color: #EF4444;
 }
 </style>

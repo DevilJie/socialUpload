@@ -116,11 +116,11 @@ function onImageError(e) {
   width: 40px;
   height: 40px;
   border-radius: 4px;
-  background: #f5f5f5;
+  background: #27273B;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #999;
+  color: #94A3B8;
   flex-shrink: 0;
 }
 
@@ -131,7 +131,7 @@ function onImageError(e) {
 
 .mix-name {
   font-size: 14px;
-  color: #333;
+  color: #F8FAFC;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -139,7 +139,7 @@ function onImageError(e) {
 
 .mix-desc {
   font-size: 12px;
-  color: #999;
+  color: #94A3B8;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;

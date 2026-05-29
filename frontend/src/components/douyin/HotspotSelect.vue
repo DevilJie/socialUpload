@@ -131,11 +131,11 @@ function onImageError(e) {
   width: 40px;
   height: 40px;
   border-radius: 4px;
-  background: #ffebee;
+  background: #27273B;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #f44336;
+  color: #EF4444;
   flex-shrink: 0;
 }
 
@@ -146,7 +146,7 @@ function onImageError(e) {
 
 .hotspot-word {
   font-size: 14px;
-  color: #333;
+  color: #F8FAFC;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -154,10 +154,10 @@ function onImageError(e) {
 
 .hotspot-meta {
   font-size: 12px;
-  color: #999;
+  color: #94A3B8;
 }
 
 .hotspot-hot {
-  color: #ff4444;
+  color: #EF4444;
 }
 </style>

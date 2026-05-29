@@ -149,7 +149,7 @@ function onImageError(e) {
 
 .music-title {
   font-size: 14px;
-  color: $text-primary;
+  color: #F8FAFC;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -160,12 +160,12 @@ function onImageError(e) {
   gap: 8px;
   margin-top: 4px;
   font-size: 12px;
-  color: $text-secondary;
+  color: #94A3B8;
 }
 
 .music-users {
   font-size: 12px;
-  color: $text-muted;
+  color: #94A3B8;
   flex-shrink: 0;
 }
 </style>
