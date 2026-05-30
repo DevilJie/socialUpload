@@ -218,10 +218,12 @@ def get_all_files():
         with sqlite3.connect(str(DB_PATH)) as conn:
             conn.row_factory = sqlite3.Row
             cursor = conn.cursor()
-            cursor.execute("SELECT * FROM file_records")
-            rows = cursor.fetchall()
 
             data = []
+
+            # 1. 查询素材库文件 (file_records)
+            cursor.execute("SELECT * FROM file_records")
+            rows = cursor.fetchall()
             for row in rows:
                 row_dict = dict(row)
                 if row_dict.get('file_path'):
@@ -229,6 +231,24 @@ def get_all_files():
                     row_dict['uuid'] = file_path_parts[0] if file_path_parts else ''
                 else:
                     row_dict['uuid'] = ''
+                row_dict['source'] = 'material'  # 标记来源
+                # 统一字段名
+                row_dict['name'] = row_dict.get('filename', '')
+                row_dict['url'] = f"/getFile?filename={row_dict.get('file_path', '')}"
+                data.append(row_dict)
+
+            # 2. 查询图文发布图片 (image_records)
+            cursor.execute("SELECT * FROM image_records")
+            rows = cursor.fetchall()
+            for row in rows:
+                row_dict = dict(row)
+                row_dict['source'] = 'image-publish'  # 标记来源
+                # 统一字段名
+                row_dict['name'] = row_dict.get('original_filename', '')
+                row_dict['filename'] = row_dict.get('original_filename', '')
+                row_dict['file_path'] = row_dict.get('stored_filename', '')
+                row_dict['url'] = f"/api/image-publish/files/{row_dict.get('stored_filename', '')}"
+                row_dict['uuid'] = ''
                 data.append(row_dict)
 
         return jsonify({"code": 200, "msg": "success", "data": data}), 200
