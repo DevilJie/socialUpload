@@ -285,6 +285,17 @@
                     />
                   </div>
                 </div>
+
+                <div class="setting-row">
+                  <!-- 封面图片 -->
+                  <div class="setting-item full-width">
+                    <ImageCoverUpload
+                      v-model="form.coverImage"
+                      label="封面图片"
+                      @open-library="openMaterialLibraryForCover"
+                    />
+                  </div>
+                </div>
               </div>
             </div>
 
@@ -557,6 +568,7 @@ import ImageUploader from '@/components/ImageUploader.vue'
 import ImageCarousel from '@/components/ImageCarousel.vue'
 import ImagePreviewDialog from '@/components/ImagePreviewDialog.vue'
 import MaterialSelectDialog from '@/components/MaterialSelectDialog.vue'
+import ImageCoverUpload from '@/components/ImageCoverUpload.vue'
 
 // 抖音图文发布组件
 import DouyinMixSelect from '@/components/douyin/MixSelect.vue'
@@ -834,12 +846,19 @@ function openPreviewDialog() {
 }
 
 function openMaterialLibraryForImage(index) {
+  materialSelectMode.value = 'image'
   materialSelectDialogRef.value?.open()
   // Store the target index for when material is selected
   materialTargetIndex.value = index
 }
 
+function openMaterialLibraryForCover() {
+  materialSelectMode.value = 'cover'
+  materialSelectDialogRef.value?.open()
+}
+
 const materialTargetIndex = ref(-1)
+const materialSelectMode = ref('image') // 'image' or 'cover'
 
 function onMaterialSelected(material) {
   const imageData = {
@@ -853,6 +872,21 @@ function onMaterialSelected(material) {
     progress: 100,
   }
 
+  // 如果是选择封面
+  if (materialSelectMode.value === 'cover') {
+    form.coverImage = {
+      id: imageData.id,
+      name: material.name,
+      url: material.url,
+      path: material.path,
+      size: material.size,
+      type: material.type,
+    }
+    ElMessage.success('封面选择成功')
+    return
+  }
+
+  // 选择图片
   const targetIdx = materialTargetIndex.value
   if (targetIdx >= 0 && targetIdx < commonConfig.images.length) {
     // Replace existing image
@@ -1027,6 +1061,7 @@ async function saveDraft() {
         mixId: form.mixId || null,
         mixData: form.mixData || null,
         selectedTag: form.selectedTag || null,
+        coverImage: form.coverImage || null,
       }
     }
 
@@ -1334,6 +1369,7 @@ async function loadDraft(draftId) {
           form.mixId = dd.douyinSelections.mixId || ''
           form.mixData = dd.douyinSelections.mixData || null
           form.selectedTag = dd.douyinSelections.selectedTag || null
+          form.coverImage = dd.douyinSelections.coverImage || null
           console.log('form.selectedTag after restore:', form.selectedTag)
         }
 
