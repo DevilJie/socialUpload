@@ -220,6 +220,15 @@
             </div>
           </div>
 
+          <!-- 封面图片（公共设置） -->
+          <div class="platform-title-desc">
+            <ImageCoverUpload
+              v-model="form.coverImage"
+              label="封面图片"
+              @open-library="openMaterialLibraryForCover"
+            />
+          </div>
+
           <!-- ===== 抖音图文特有配置 ===== -->
           <template v-if="selectedPlatform === 'douyin'">
             <div class="config-group">
@@ -282,17 +291,6 @@
                       :account-id="selectedAccountId"
                       v-model="form.selectedTag"
                       @change="handleTagSelect"
-                    />
-                  </div>
-                </div>
-
-                <div class="setting-row">
-                  <!-- 封面图片 -->
-                  <div class="setting-item full-width">
-                    <ImageCoverUpload
-                      v-model="form.coverImage"
-                      label="封面图片"
-                      @open-library="openMaterialLibraryForCover"
                     />
                   </div>
                 </div>
