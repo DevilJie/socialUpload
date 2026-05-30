@@ -253,7 +253,7 @@
                     <div class="setting-label" :style="{ color: currentPlatformConfig.color }">关联热点</div>
                     <DouyinHotspotSelect
                       v-model="form.hotspotId"
-                      :data="form.selectedHotspotData"
+                      :data="form.hotspotData"
                       @change="handleHotspotChange"
                     />
                   </div>
@@ -299,7 +299,7 @@
                     <DouyinMixSelect
                       :account-id="selectedAccountId"
                       v-model="form.mixId"
-                      :data="form.selectedMixData"
+                      :data="form.mixData"
                       @change="handleMixChange"
                     />
                   </div>
@@ -921,25 +921,25 @@ function handleMusicSelect(music) {
 
 function handleHotspotChange(hotspot) {
   if (hotspot) {
-    form.selectedHotspot = hotspot.word
-    form.selectedHotspotData = hotspot
+    form.hotspotId = hotspot.word
+    form.hotspotData = hotspot
     // 如果选择了热点，自动添加到话题
     if (!commonConfig.topics.includes(hotspot.word)) {
       commonConfig.topics.push(hotspot.word)
     }
   } else {
-    form.selectedHotspot = ''
-    form.selectedHotspotData = null
+    form.hotspotId = ''
+    form.hotspotData = null
   }
 }
 
 function handleMixChange(mix) {
   if (mix) {
-    form.selectedMix = mix.mix_name
-    form.selectedMixData = mix
+    form.mixId = mix.mix_name
+    form.mixData = mix
   } else {
-    form.selectedMix = ''
-    form.selectedMixData = null
+    form.mixId = ''
+    form.mixData = null
   }
 }
 
@@ -947,12 +947,10 @@ function handleTagSelect(tag) {
   console.log('handleTagSelect:', tag)
   if (tag) {
     form.selectedTag = tag
-    form.selectedTagData = tag
     console.log('form.selectedTag set to:', form.selectedTag)
     ElMessage.success(`标签已选择: ${tag.name}`)
   } else {
     form.selectedTag = null
-    form.selectedTagData = null
   }
 }
 
@@ -1018,16 +1016,15 @@ async function saveDraft() {
       selectedPlatform: selectedPlatform.value,
       selectedAccountId: selectedAccountId.value,
       expandedGroups: [...expandedGroups.value],
-      // 保存完整的选中对象和搜索关键词
+      // 保存完整的选中对象
       douyinSelections: {
         selectedMusic: form.selectedMusic || null,
         selectedMusicData: form.selectedMusicData || null,
-        selectedHotspot: form.selectedHotspot || null,
-        selectedHotspotData: form.selectedHotspotData || null,
-        selectedMix: form.selectedMix || null,
-        selectedMixData: form.selectedMixData || null,
+        hotspotId: form.hotspotId || null,
+        hotspotData: form.hotspotData || null,
+        mixId: form.mixId || null,
+        mixData: form.mixData || null,
         selectedTag: form.selectedTag || null,
-        selectedTagData: form.selectedTagData || null,
       }
     }
 
@@ -1330,12 +1327,11 @@ async function loadDraft(draftId) {
           console.log('恢复抖音选择数据:', dd.douyinSelections)
           form.selectedMusic = dd.douyinSelections.selectedMusic || ''
           form.selectedMusicData = dd.douyinSelections.selectedMusicData || null
-          form.hotspotId = dd.douyinSelections.selectedHotspot || ''
-          form.selectedHotspotData = dd.douyinSelections.selectedHotspotData || null
-          form.mixId = dd.douyinSelections.selectedMix || ''
-          form.selectedMixData = dd.douyinSelections.selectedMixData || null
+          form.hotspotId = dd.douyinSelections.hotspotId || ''
+          form.hotspotData = dd.douyinSelections.hotspotData || null
+          form.mixId = dd.douyinSelections.mixId || ''
+          form.mixData = dd.douyinSelections.mixData || null
           form.selectedTag = dd.douyinSelections.selectedTag || null
-          form.selectedTagData = dd.douyinSelections.selectedTagData || null
           console.log('form.selectedTag after restore:', form.selectedTag)
         }
 
